@@ -1,3 +1,14 @@
+# Personal specific
+*.eps
+*.C
+*.log
+*.root
+*.txt
+*.png
+*.pyc
+results/*
+!results/.gitkeep 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

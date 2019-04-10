@@ -1,0 +1,20 @@
+{
+        "root_file":"data/gm2nearline_fastRotation_run24442.root",
+        "tag":"nearline",
+	"lower_t0":-0.110,
+	"upper_t0":-0.050,
+	"t0_step_size":0.002,
+	"tS":4,
+	"tM":100,
+        "rebin_factor":100,
+	"histo_name":"hHitTimes",
+	"print_plot":true,
+	"poly_order":4,
+	"calc_sine":false,
+        "verbose":1,
+        "n_t0_opt":3,
+        "start_fit_time":30,
+        "n_fit_param":9,
+        "stat_fluctuation": false,
+        "field_index":0.0
+}
