@@ -136,7 +136,7 @@ def run_freq_step_scan(config):
 
         # set tM
         config['freq_step_size'] = round(config['lower_freq_step_size']+idx_freq *
-                             config['freq_step_size_increment'], 3)
+                                         config['freq_step_size_increment'], 3)
 
         print(config['freq_step_size'])
 
@@ -157,7 +157,8 @@ def run_freq_step_scan(config):
         config['print_plot'] = True
 
         # produce results
-        results = fourier.Fourier(config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+        results = fourier.Fourier(
+            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
         results.run()
 
         del fr, t0, results

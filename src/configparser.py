@@ -23,4 +23,5 @@ class ParseConfig:
         self.freq_step_size = config['freq_step_size']
         self.lower_freq = config['lower_freq']
         self.upper_freq = config['upper_freq']
-        self.n_freq_step =  int( ( self.upper_freq - self.lower_freq ) / self.freq_step_size )
+        self.n_freq_step = int(
+            (self.upper_freq - self.lower_freq) / self.freq_step_size)

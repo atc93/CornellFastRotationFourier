@@ -30,7 +30,7 @@ class Optimize_t0(configparser.ParseConfig):
         # extract optimum chi2 by finding the derivative
         # root that lies within the t0 window
         derivative = fit_fn.deriv().r
-        t0_roots = derivative[derivative.imag==0].real
+        t0_roots = derivative[derivative.imag == 0].real
         t0_roots = np.ma.masked_where(t0_roots > self.upper_t0*1000, t0_roots)
         t0_roots = np.ma.masked_where(t0_roots < self.lower_t0*1000, t0_roots)
         t0_roots = np.ma.compressed(t0_roots)
@@ -72,7 +72,7 @@ class Optimize_t0(configparser.ParseConfig):
         # close the plot
         plt.close()
 
-        return opt_t0/1000, opt_chi2 # convert back to mu-s
+        return opt_t0/1000, opt_chi2  # convert back to mu-s
 
     def optimization_loop(self, fit_bound1, fit_bound2, noise_sigma):
 
@@ -166,36 +166,39 @@ class Optimize_t0(configparser.ParseConfig):
 
     def run_t0_optimization(self):
 
-        print(' ### Step 3/4: optimize t0 (' + str(self.n_t0_opt) + ' iterations)\n')
+        print(' ### Step 3/4: optimize t0 (' +
+              str(self.n_t0_opt) + ' iterations)\n')
 
         for iOpt in range(self.n_t0_opt):
 
             if (iOpt == 0):
 
                 t0_list, chi2_list, noise_list, bound1_list, bound2_list = self.optimization_loop(
-                        constants.lowerCollimatorFreq, constants.upperCollimatorFreq, 0.02)
-                opt_t0, opt_chi2 = self.extract_optimum(t0_list, chi2_list, 'Opt_1')
+                    constants.lowerCollimatorFreq, constants.upperCollimatorFreq, 0.02)
+                opt_t0, opt_chi2 = self.extract_optimum(
+                    t0_list, chi2_list, 'Opt_1')
                 opt_idx = min(range(len(t0_list)),
-                key=lambda i: abs(t0_list[i]-opt_t0))
-                if ( self.verbose > 0 ):
+                              key=lambda i: abs(t0_list[i]-opt_t0))
+                if (self.verbose > 0):
                     print('')
                 print('    t0 optimization, iteration #' + str(iOpt + 1) + ' done, t0 = ' +
-            '{0:.3f}'.format(opt_t0*1000) + ' ns')
-                if ( self.verbose > 0 ):
+                      '{0:.3f}'.format(opt_t0*1000) + ' ns')
+                if (self.verbose > 0):
                     print('')
 
             else:
 
                 t0_list, chi2_list, noise_list, bound1_list, bound2_list = self.optimization_loop(
-                bound1_list[opt_idx], bound2_list[opt_idx], noise_list[opt_idx])
-                opt_t0, opt_chi2 = self.extract_optimum(t0_list, chi2_list, 'Opt_' + str(iOpt+1))
+                    bound1_list[opt_idx], bound2_list[opt_idx], noise_list[opt_idx])
+                opt_t0, opt_chi2 = self.extract_optimum(
+                    t0_list, chi2_list, 'Opt_' + str(iOpt+1))
                 opt_idx = min(range(len(t0_list)),
-                key=lambda i: abs(t0_list[i]-opt_t0))
-                if ( self.verbose > 0 ):
+                              key=lambda i: abs(t0_list[i]-opt_t0))
+                if (self.verbose > 0):
                     print('')
                 print('    t0 optimization, iteration #' + str(iOpt+1) + ' done, t0 = ' +
-            '{0:.3f}'.format(opt_t0*1000) + ' ns')
-                if ( self.verbose > 0 ):
+                      '{0:.3f}'.format(opt_t0*1000) + ' ns')
+                if (self.verbose > 0):
                     print('')
 
         return opt_t0, opt_chi2, noise_list[opt_idx], bound1_list[opt_idx], bound2_list[opt_idx]
