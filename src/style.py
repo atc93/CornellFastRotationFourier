@@ -162,12 +162,12 @@ def setRadialResultsPaveText(eqRadius, std, CE, yMin, yMax, radMin, radMax, coor
     pt = r.TPaveText(radMin, yMax, radMax, yMin)
 
     if (coord == 'beam'):
-        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eqRadius) + ' mm')
-        pt.AddText('#sigma = ' + '{0:.2f}'.format(std) + ' mm')
+        pt.AddText('x_{e} = ' + '{0:.1f}'.format(eqRadius) + ' mm')
+        pt.AddText('#sigma = ' + '{0:.1f}'.format(std) + ' mm')
         #pt.AddText('  C_{E} = ' + '{0:.0f}'.format(CE) + ' ppb ');
     elif (coord == 'ring'):
-        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eqRadius) + ' mm')
-        pt.AddText('#sigma = ' + '{0:.2f}'.format(std) + ' mm   ')
+        pt.AddText('x_{e} = ' + '{0:.1f}'.format(eqRadius) + ' mm')
+        pt.AddText('#sigma = ' + '{0:.1f}'.format(std) + ' mm   ')
     pt.SetShadowColor(0)
     pt.SetBorderSize(1)
     pt.SetFillColor(0)

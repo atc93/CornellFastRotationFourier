@@ -1,6 +1,6 @@
 {
-        "root_file":"data/gm2nearline_fastRotation_run24442.root",
-        "tag":"nearlin",
+        "root_file":"data/FastRotation_run24577_24622.root",
+        "tag":"nearline",
 	"lower_t0":-0.110,
 	"upper_t0":-0.050,
 	"t0_step_size":0.002,
@@ -11,7 +11,7 @@
         "upper_tS":15.000,
         "tS_step_size":0.005,
 	"tM":100,
-        "run_tM_scan":true,
+        "run_tM_scan":false,
         "lower_tM":100,
         "upper_tM":101,
         "tM_step_size":0.005,

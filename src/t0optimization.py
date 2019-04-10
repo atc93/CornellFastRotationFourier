@@ -1,5 +1,4 @@
 import src.configparser as configparser
-import scipy.optimize
 import src.constants as constants
 import matplotlib.pyplot as plt
 import src.util as util

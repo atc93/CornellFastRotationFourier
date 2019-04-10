@@ -1,4 +1,3 @@
-import numba as nb
 import os
 import math
 import shutil
@@ -218,7 +217,8 @@ def extractMinima(hist):
     hist.GetXaxis().SetRangeUser(constants.lower_freq, constants.upper_freq)
     return min1, min2, abs(min1-min2), minBinIdx1, minBinIdx2
 
-
+'''
+import numba as nb
 @nb.njit(fastmath=True, parallel=True)
 def compute_numba(t0, a, b, it):
     res = np.empty((it, a.shape[0]))
@@ -260,3 +260,4 @@ def compute_numba(t0, a, b, it):
         #np.sum( a[j] * np.cos( 2. * np.pi * frequency * (b[j]-t0) )*0.001 )
 
     return integral
+'''    
