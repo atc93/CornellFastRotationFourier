@@ -1,3 +1,4 @@
+from scipy.optimize import curve_fit
 import src.configparser as configparser
 import src.constants as constants
 import matplotlib.pyplot as plt
@@ -113,9 +114,18 @@ class Optimize_t0(configparser.ParseConfig):
             # fit the background
             fit = np.polyfit(a, b, self.poly_order, w=err)
 
+            func, popt, pcov = util.fit_bkg(a, b, err)
+
+            if (self.verbose > 0 ):
+                print('    bkg fit param: ', popt)
+
+            r = b - func(a, *popt)
+
             # compute chi2
             chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
                           noise_sigma ** 2)/(len(a)-self.poly_order)
+
+            chi2 = sum((r / err) ** 2)/len(r)
 
             # create function from fit results
             fit_fn = np.poly1d(fit)
@@ -123,12 +133,13 @@ class Optimize_t0(configparser.ParseConfig):
             # plot frequency distribution alongside the background and its fit
             plt.plot(freq, intensity, marker='o', ms=2)
             plt.plot(freq, fit_fn(freq))
+            plt.plot(freq, func(freq, *popt))
             plt.errorbar(a, b, yerr=noise_sigma, marker='o', ms=2, markerfacecolor='black',
                          ecolor='black', markeredgecolor='black', linestyle='')
 
             # show plot if enabled by config file
             if (self.print_plot):
-                plt.savefig('results/' + self.tag + '/t0_optimization/Cosine_t0_{0:.4f}_tS_{1}_tM_{2}_{3}_{4}.eps'.format(
+                plt.savefig('results/' + self.tag + '/t0_optimization/Cosine_t0_{0:.6f}_tS_{1}_tM_{2}_{3}_{4}.eps'.format(
                     t0, self.tS, self.tM, fit_bound1, fit_bound2), format='eps')
 
             # close plot
@@ -141,23 +152,31 @@ class Optimize_t0(configparser.ParseConfig):
 
             # optimize the fit boundaries using noise_sigma and the noise threshold
             for i in range(int(len(freq)/2-1), 0, -1):
-                if (intensity[i]-np.polyval(fit, freq[i]) < constants.noiseThreshold*noise_sigma):
+                #if (intensity[i]-np.polyval(fit, freq[i]) < self.noise_threshold*noise_sigma):
+                if (intensity[i]-func(freq[i], *popt) < self.noise_threshold*noise_sigma):
                     opt_bound1 = freq[i]
                     break
+                else:
+                    opt_bound1 = constants.lowerCollimatorFreq
+
             for i in range(int(len(freq)/2), int(len(freq)), +1):
-                if (intensity[i]-np.polyval(fit, freq[i]) < constants.noiseThreshold*noise_sigma):
+                #if (intensity[i]-np.polyval(fit, freq[i]) < self.noise_threshold*noise_sigma):
+                if (intensity[i]-func(freq[i], *popt) < self.noise_threshold*noise_sigma):
                     opt_bound2 = freq[i]
                     break
+                else:
+                    opt_bound2 = constants.upperCollimatorFreq
 
             # print outs
             if (self.verbose > 0):
-                print('    t0: {0:.3f}'.format(t0*1000), 'ns\tchi2/dof: {0:.3f}'.format(chi2), '\tnoise: {0:.5f}'.format(np.std(residuals)),
+                print('    t0: {0:.3f}'.format(t0*1000), 'ns\tchi2/dof: {0:.3f}'.format(chi2), '\tnoise: {0:.5f}'.format(np.std(r)),
                       '\topt bound1: {0:.0f}'.format(opt_bound1), 'kHz \topt bound2: {0:.0f}'.format(opt_bound2), 'kHz')
 
             # append results to lists
             t0_list.append(t0)
             chi2_list.append(chi2)
-            noise_list.append(np.std(residuals))
+            #noise_list.append(np.std(residuals))
+            noise_list.append(np.std(r))
             bound1_list.append(opt_bound1)
             bound2_list.append(opt_bound2)
 

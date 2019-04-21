@@ -1,3 +1,4 @@
+from scipy.optimize import curve_fit
 import src.configparser as configparser
 import src.constants as constants
 import src.plotting as plotting
@@ -115,9 +116,25 @@ class Fourier(configparser.ParseConfig):
 
         fit = np.polyfit(a, b, self.poly_order, w=err)
 
+        func, popt, pcov = util.fit_bkg(a, b, err)
+
+        print(popt)
+
+        r = b - func(a, *popt)
+        chi2 = sum((r / err) ** 2)/len(r)
+
+        a = []
+        b = []
+
+        for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1):
+                a.append(self.cosine_histogram.GetBinCenter(bin_idx))
+                b.append(self.cosine_histogram.GetBinContent(bin_idx))
+
+        fit = func(a, *popt)
+
         # compute chi2
-        chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
-                      self.noise_sigma ** 2)/(len(a)-self.poly_order)
+        #chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
+        #              self.noise_sigma ** 2)/(len(a)-self.poly_order)
 
         return fit, chi2
 
@@ -127,23 +144,29 @@ class Fourier(configparser.ParseConfig):
 
         zero_out = False
         for bin_idx in range(max_amplitude_bin_idx, 0, -1):
-            if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < constants.noiseThreshold*self.noise_sigma):
+            #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.noise_threshold*self.noise_sigma):
+            if ((self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
                 zero_out = True
             if (zero_out):
                 self.cosine_histogram.SetBinContent(bin_idx, 0)
             else:
+                #self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
+                #    bin_idx)-np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx)))
                 self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
-                    bin_idx)-np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx)))
+                    bin_idx)-fit[int(bin_idx)-1])
 
         zero_out = False
         for bin_idx in range(max_amplitude_bin_idx+1, self.cosine_histogram.GetNbinsX()+1, +1):
-            if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < constants.noiseThreshold*self.noise_sigma):
+            #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.noise_threshold*self.noise_sigma):
+            if ((self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
                 zero_out = True
             if (zero_out):
                 self.cosine_histogram.SetBinContent(bin_idx, 0)
             else:
+                #self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
+                #    bin_idx)-np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx)))
                 self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
-                    bin_idx)-np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx)))
+                    bin_idx)-fit[int(bin_idx)-1])
 
         #== Style the approximated frequency distribution histogram ==#
         style.setTH1Style(self.cosine_histogram, '',
@@ -156,11 +179,64 @@ class Fourier(configparser.ParseConfig):
         #== Define pave text to go along the collimator apertures lines ==#
         pt, pt2 = style.setCollimatorAperturePaveText(self.cosine_histogram.GetMaximum(
         )*0.38, self.cosine_histogram.GetMaximum()*0.52, 'frequency')
+        pt3 = style.setRecFrequenciesPaveText(self.cosine_histogram.GetMean(), self.cosine_histogram.GetRMS(), self.cosine_histogram.GetMaximum()*0.38, 
+                self.cosine_histogram.GetMaximum()*0.52)
 
         #== Draw it all ==#
         list_to_draw = [self.cosine_histogram, inner_line, outer_line, pt, pt2]
         plotting.plotMultipleObjects('', list_to_draw)
         self.canvas.Draw()
+
+        #== Compare radial and frequency distribution with truth level ones (if simulated data) ==#
+        if (self.compare_with_truth):
+
+            #== Normalize the integral of the frequency distribution to 1 ==#
+            self.cosine_histogram.Scale(1/self.cosine_histogram.Integral())
+
+            #== Retrieve the truth level frequency distribution ==#
+            truth_file = r.TFile(self.truth_root_file)
+            truth_histogram = truth_file.Get(self.truth_histo_name)
+
+            #== Rebin the truth level distribution if needed ==#
+            if (self.freq_step_size > truth_histogram.GetBinWidth(1) ):
+                truth_histogram.Rebin( int(self.freq_step_size / truth_histogram.GetBinWidth(1) ) )
+
+            #== Normalize the integral of the frequency distribution to 1 ==#
+            truth_histogram.Scale( 1/truth_histogram.Integral() )
+
+            #== Restyle the reconstructed level frequency distribution ==#
+            style.setTH1Style( self.cosine_histogram, '', 'Frequency [kHz]', 'Arbitrary units' )
+
+            #== Limit the a-axis to the collimator aperture ==#
+            self.cosine_histogram.GetXaxis().SetRangeUser( constants.lowerCollimatorFreq, constants.upperCollimatorFreq )
+
+            #== Draw reconstructed level distribution ==#
+            self.cosine_histogram.Draw("hist")
+
+            #== Style the truth level distribution ==#
+            truth_histogram.SetMarkerColor(2)
+            truth_histogram.SetLineColor(2)
+            truth_histogram.SetLineStyle(1)
+            truth_histogram.SetLineWidth(0)
+            truth_histogram.SetMarkerStyle(20)
+            truth_histogram.SetMarkerSize(0.8)
+
+            #== Draw the markers of the truth level distribution ==#
+            truth_histogram.Draw("samehistP0")
+
+            #== Draw the line of the truth level distribution ==#
+            truth_histogram.Draw("samehist")
+
+            #== Define pave text to go display truth/reco level mean frequencies ==#
+            pt = style.setRecTruthFrequenciesPaveText( self.cosine_histogram.GetMean(), truth_histogram.GetMean(),
+                    self.cosine_histogram.GetRMS(), truth_histogram.GetRMS(),
+                    self.cosine_histogram.GetMaximum()*1., self.cosine_histogram.GetMaximum()*0.8 )
+
+            #== Draw the TPaveText ==#
+            pt.Draw("same")
+
+            #== Draw TCanvas ==#
+            self.canvas.Draw()
 
         if (self.print_plot == 1):
             self.canvas.Print('results/' + self.tag + '/CorrectedCosine_t0_{0:.5f}_tS_{1}_tM_{2}df_{3}.eps'.format(
@@ -208,7 +284,7 @@ class Fourier(configparser.ParseConfig):
             graph_max*0.04, graph_max*0.11)
 
         #== Compute Standard Deviation of the radial distribution (within the collimator aperture) ==#
-        std = util.computeRadialSTD(radius, intensity, eq_radius)
+        std = util.computeRadialSTD(radius, intensity, eq_radius, 'ring')
 
         # == Compute E-field correction
         c_e = util.computeEfieldCorrection(
@@ -257,6 +333,69 @@ class Fourier(configparser.ParseConfig):
             eq_radius-constants.magicR, std, c_e, graph_max*0.7, graph_max*0.96, -40, -20, 'beam')
         graph.Draw('APL')
         results_pave_text.Draw("same")
+
+        #== Extract truth radial information if running on MC data ==#
+        if ( self.compare_with_truth ):
+
+            #== Define pave text with x_e, width and CE information ==#
+            #esults_pave_ext = style.setRadialResultsPaveText( eq_radius-constants.magicR, std, c_e, graph_max*0.7, graph_max*0.96, 7070, 7095, 'beam' )
+
+            #== Draw it all ==#
+            #istToDraw = [ graph, magic_line, inner_line, outer_line, pt, pt2, magic_radius_pave_text, results_pave_text ]
+            #lotting.plotMultipleObjects( 'APL', listToDraw )
+
+            #== Retrieve truth radial TGraph
+            truth_file = r.TFile(self.truth_root_file)
+            truth_graph = truth_file.Get( "r" )
+
+            # convert from ring global coordinate to local beam coordinate
+            util.globalToLocalRadialCoordinate(truth_graph)
+            truth_graph.GetXaxis().SetRangeUser(-45, +45)
+
+            #== Normalize truth TGraph to 1 ==#
+            n_point = truth_graph.GetN()
+            max_amp = max(truth_graph.GetY())
+            truth_intensity, truth_radius = array.array( 'd' ), array.array( 'd' )
+            for i in range(1, n_point):
+                x, y = r.Double(), r.Double()
+                truth_graph.GetPoint(i, x, y)
+                truth_graph.SetPoint(i, x, y/max_amp)
+                truth_radius.append( x )
+                truth_intensity.append( y )
+
+            #style.setTGraphStyle( truth, '', 'Radius [mm]', 'Arbitrary units' )
+            truth_graph.SetMarkerColor(2)
+            truth_graph.SetLineColor(2)
+            truth_graph.SetMarkerStyle(20)
+            truth_graph.Draw("sameP")
+
+            #== Define truth array to compute x_e and width ==#
+            #truth_intensity, truth_radius = array.array( 'd' ), array.array( 'd' )
+
+            #for i in range(1, n_point):
+            #    x, y = r.Double(), r.Double()
+            #    truth_graph.GetPoint(i, x, y)
+            #    truth_radius.append( x )
+            #    truth_intensity.append( y )
+
+            truth_eq_radius = np.average( truth_radius, axis=0, weights=truth_intensity)
+            truth_std = util.computeRadialSTD( truth_radius, truth_intensity, truth_eq_radius, 'beam' )
+
+            pt5=r.TPaveText(20, graph_max*0.7,40, graph_max*0.96);
+            pt5.AddText('Truth level');
+            pt5.AddText('x_{e} = ' + '{0:.2f}'.format(truth_eq_radius) + ' mm');
+            pt5.AddText(' #sigma = ' + '{0:.2f}'.format(truth_std) + ' mm');
+            #  pt5.AddText('      C_{E} = ' + '{0:.1f}'.format(C_E_reco) + ' ppb ');
+            pt5.SetShadowColor(0);
+            pt5.SetBorderSize(1);
+            pt5.SetFillColor(0);
+            pt5.SetLineWidth(1);
+            pt5.SetLineColor(2);
+            pt5.SetTextColor(2);
+            pt5.SetTextAngle(90);
+            pt5.Draw("same")
+            #graph.Draw("sameP")
+
         if (self.print_plot == 1):
             self.canvas.Print(
                 'results/' + self.tag + '/RadialBeamCoordinate_t0_{0:.5f}_tS_{1}_tM_{2}.eps'.format(self.opt_t0, self.tS, self.tM))
@@ -272,8 +411,8 @@ class Fourier(configparser.ParseConfig):
             results_text_file = open(
                 str('results/' + self.tag + '/results.txt'), "w")
 
-        results_text_file.write('t0 %f chi2 %f noise %f tS %f tM %f df %f fieldIndex %f eq_radius %f std %f c_e %f \n' %
-                                (self.opt_t0, chi2, self.noise_sigma, self.tS, self.tM, self.freq_step_size, self.field_index, eq_radius, std, c_e))
+        results_text_file.write('t0 %f chi2 %f noise %f noise_threshold %f tS %f tM %f df %f fieldIndex %f eq_radius %f std %f c_e %f \n' %
+                                (self.opt_t0, chi2, self.noise_sigma, self.noise_threshold, self.tS, self.tM, self.freq_step_size, self.field_index, eq_radius, std, c_e))
 
     def run(self):
 

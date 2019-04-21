@@ -129,17 +129,25 @@ class FastRotation(configparser.ParseConfig):
         if (self.stat_fluctuation):
             self.histogram = apply_stat_fluctutation()
 
+        # rebin fast rotation histogram
+        if (self.n_fit_param == 0):
+            self.histogram.Rebin(self.rebin_frs_factor)
+
         # plot input histogram if option specified
         if (self.print_plot):
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, self.histogram, self.tag +
                               '/Intensity', self.tS, self.tS + time, self.tM)
 
+        # return histogram if no need for fit
+        if (self.n_fit_param == 0):
+            return (self.return_frs_np_array(self.histogram))
+
         # clone input histogram to produce wiggle plot
         wiggle_histogram = self.histogram.Clone()
 
         # rebin cloned histograms
-        wiggle_histogram.Rebin(self.rebin_factor)
+        wiggle_histogram.Rebin(self.rebin_wiggle_factor)
 
         # plot fitted wiggle plot if option specified
         if (self.print_plot):
@@ -167,7 +175,10 @@ class FastRotation(configparser.ParseConfig):
         # create fast rotation histogram
         for i in range(self.histogram.GetNbinsX()):
             self.histogram.SetBinContent(i+1, self.histogram.GetBinContent(i+1)/(
-                wiggle_fit.Eval(self.histogram.GetBinCenter(i+1))/self.rebin_factor))
+                wiggle_fit.Eval(self.histogram.GetBinCenter(i+1))/self.rebin_wiggle_factor))
+
+        # rebin fast rotation histogram
+        self.histogram.Rebin(self.rebin_frs_factor)
 
         # plot fitted wiggle plot if option specified
         if (self.print_plot):

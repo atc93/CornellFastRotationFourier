@@ -162,12 +162,12 @@ def setRadialResultsPaveText(eqRadius, std, CE, yMin, yMax, radMin, radMax, coor
     pt = r.TPaveText(radMin, yMax, radMax, yMin)
 
     if (coord == 'beam'):
-        pt.AddText('x_{e} = ' + '{0:.1f}'.format(eqRadius) + ' mm')
-        pt.AddText('#sigma = ' + '{0:.1f}'.format(std) + ' mm')
+        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eqRadius) + ' mm')
+        pt.AddText('#sigma = ' + '{0:.2f}'.format(std) + ' mm')
         #pt.AddText('  C_{E} = ' + '{0:.0f}'.format(CE) + ' ppb ');
     elif (coord == 'ring'):
-        pt.AddText('x_{e} = ' + '{0:.1f}'.format(eqRadius) + ' mm')
-        pt.AddText('#sigma = ' + '{0:.1f}'.format(std) + ' mm   ')
+        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eqRadius) + ' mm')
+        pt.AddText('#sigma = ' + '{0:.2f}'.format(std) + ' mm   ')
     pt.SetShadowColor(0)
     pt.SetBorderSize(1)
     pt.SetFillColor(0)
@@ -180,11 +180,29 @@ def setRadialResultsPaveText(eqRadius, std, CE, yMin, yMax, radMin, radMax, coor
 #== Create and set TPaveText style to compare rec/truth-level mean frequencies ==#
 
 
-def setRecTruthFrequenciesPaveText(recFreq, trueFreq, yMin, yMax):
+def setRecTruthFrequenciesPaveText(recFreq, trueFreq, rec_width, true_width, yMin, yMax):
 
     pt = r.TPaveText(6664, yMax, 6686, yMin)
     pt.AddText('<reco freq> = ' + '{0:.2f}'.format(recFreq) + ' kHz')
-    pt.AddText('<true freq> = ' + '{0:.2f}'.format(trueFreq) + ' kHz')
+    pt.AddText('  <true freq> = ' + '{0:.2f}'.format(trueFreq) + ' kHz ')
+    pt.GetListOfLines().Last().SetTextColor(2)
+    pt.AddText('  reco width = ' + '{0:.2f}'.format(rec_width) + ' kHz    ')
+    pt.AddText(' true width = ' + '{0:.2f}'.format(true_width) + ' kHz   ')
+    pt.GetListOfLines().Last().SetTextColor(2)
+    pt.SetShadowColor(0)
+    pt.SetBorderSize(1)
+    pt.SetFillColor(0)
+    pt.SetLineWidth(1)
+    pt.SetLineColor(1)
+    pt.SetTextAngle(90)
+
+    return pt
+
+def setRecFrequenciesPaveText(freq, width, yMin, yMax):
+
+    pt = r.TPaveText(6664, yMax, 6686, yMin)
+    pt.AddText('<rfreq> = ' + '{0:.2f}'.format(freq) + ' kHz')
+    pt.AddText('  width = ' + '{0:.2f}'.format(width) + ' kHz    ')
     pt.GetListOfLines().Last().SetTextColor(2)
     pt.SetShadowColor(0)
     pt.SetBorderSize(1)

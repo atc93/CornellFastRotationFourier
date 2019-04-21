@@ -1,3 +1,4 @@
+from scipy.optimize import curve_fit
 import os
 import math
 import shutil
@@ -7,6 +8,15 @@ import src.constants as constants
 
 # compute the cosine Fourier transform
 
+def fit_bkg(a, b, err):
+
+    def func(x,a,b,c,d):
+        return a * np.sin(np.asarray(x-c)/d)/((x-c)/d) + b
+
+    #popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6680, 10],[0, 0, 6720, 50]), sigma=err)
+    popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, 0, 6800, 50]), sigma=err)
+
+    return func, popt, pcov
 
 def calc_cosine_transform(t0, binContent, binCenter, freq_step_size, n_freq_step, lower_freq):
 
@@ -177,7 +187,7 @@ def computeRadialMean(radius, intensity):
 #== Compute Radial Standard Deviation within collimator aperture ==#
 
 
-def computeRadialSTD(radius, intensity, meanRad):
+def computeRadialSTD(radius, intensity, meanRad, label):
 
     std = 0
     sumI = 0
@@ -185,8 +195,12 @@ def computeRadialSTD(radius, intensity, meanRad):
     for x, y in zip(radius, intensity):
 
         #== Discard data point if radius outside of collimator aperture ==#
-        if (x < constants.lowerCollimatorRad or x > constants.upperCollimatorRad):
-            continue
+        if ( label == 'ring'):
+            if (x < constants.lowerCollimatorRad or x > constants.upperCollimatorRad):
+                continue
+        if ( label == 'beam'):
+            if (x < -45 or x > 45):
+                continue
 
         #== Else compute the STD ==#
         sumI += y

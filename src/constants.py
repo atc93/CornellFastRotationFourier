@@ -35,8 +35,3 @@ lowerCollimatorTextRad1 = float(7060)  # in kHz
 lowerCollimatorTextRad2 = float(7074)  # in kHz
 upperCollimatorTextRad1 = float(7150)  # in kHz
 upperCollimatorTextRad2 = float(7164)  # in kHz
-
-#== For analysis purposes ==#
-
-##== Noise threshold in unit of statistical standard deviation ==#
-noiseThreshold = 2
