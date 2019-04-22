@@ -1,5 +1,6 @@
 from scipy.optimize import curve_fit
 import os
+import sys
 import math
 import shutil
 import ROOT as r
@@ -13,8 +14,15 @@ def fit_bkg(a, b, err):
     def func(x,a,b,c,d):
         return a * np.sin(np.asarray(x-c)/d)/((x-c)/d) + b
 
-    #popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6680, 10],[0, 0, 6720, 50]), sigma=err)
-    popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, 0, 6800, 50]), sigma=err)
+    try:
+        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.001, 6800, 50]), sigma=err)
+    except:
+        print("Failure to fit the background: trying again")
+        try:
+            popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.001, 6800, 50]), sigma=err)
+        except:
+            print("Failure to fit the background: exiting program")
+            sys.exit(0)
 
     return func, popt, pcov
 

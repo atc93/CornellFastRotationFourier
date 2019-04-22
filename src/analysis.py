@@ -95,31 +95,33 @@ def run_t0_scan(config):
     # append results in output text file
     config['append_results'] = True
 
+    # disable saving plots
+    config['print_plot'] = False
+
+    # instantiate fast rotation class
+    fr = fastrotation.FastRotation(config)
+    # class method returns numpy arrays of the fast rotation signal
+    bin_center, bin_content = fr.produce()
+
+    # instantiate t0 optimization class
+    t0 = t0optimization.Optimize_t0(config, bin_center, bin_content)
+    # iterative optimization of t0 (2 iterations are usually enough)
+    opt_t0, chi2, noise, fit_boundary1, fit_boundary2 = t0.run_t0_optimization()
+
+    # re-enable saving plots
+    config['print_plot'] = True
+
+    del fr, t0
+
     # loop over the t0 parameters
     for idx_t0 in range(0, n_t0_step):
-
-        # disable saving plots
-        config['print_plot'] = False
-
-        # instantiate fast rotation class
-        fr = fastrotation.FastRotation(config)
-        # class method returns numpy arrays of the fast rotation signal
-        bin_center, bin_content = fr.produce()
-
-        # instantiate t0 optimization class
-        t0 = t0optimization.Optimize_t0(config, bin_center, bin_content)
-        # iterative optimization of t0 (2 iterations are usually enough)
-        opt_t0, chi2, noise, fit_boundary1, fit_boundary2 = t0.run_t0_optimization()
-
-        # re-enable saving plots
-        config['print_plot'] = True
 
         # produce results
         results = fourier.Fourier(config, bin_center, bin_content, round(
             config['lower_t0']+idx_t0 * config['t0_step_size'], 6), noise, fit_boundary1, fit_boundary2)
         results.run()
 
-        del fr, t0, results
+        del results
 
 
 def run_freq_step_scan(config):

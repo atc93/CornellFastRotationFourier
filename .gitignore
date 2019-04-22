@@ -8,6 +8,12 @@
 *.pyc
 results/*
 !results/.gitkeep 
+toy_monte_carlo/bin/*
+!toy_monte_carlo/bin/.gitkeep
+toy_monte_carlo/plot/*
+!toy_monte_carlo/plot/.gitkeep
+toy_monte_carlo/root/*
+!toy_monte_carlo/root/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
