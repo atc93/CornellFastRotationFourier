@@ -209,6 +209,34 @@ def run_noise_threshold_scan(config):
         del fr, t0, results
 
 
+def run_stat_fluc(config):
+
+    # append results in output text file
+    config['append_results'] = True
+
+    # disable saving plots
+    config['print_plot'] = False
+
+    for i in range(config['n_stat_fluctuation']):
+
+        # instantiate fast rotation class
+        fr = fastrotation.FastRotation(config)
+        # class method returns numpy arrays of the fast rotation signal
+        bin_center, bin_content = fr.produce()
+
+        # instantiate t0 optimization class
+        t0 = t0optimization.Optimize_t0(config, bin_center, bin_content)
+        # iterative optimization of t0 (2 iterations are usually enough)
+        opt_t0, chi2, noise, fit_boundary1, fit_boundary2 = t0.run_t0_optimization()
+        print(opt_t0, ' ', chi2, ' ', noise, ' ', fit_boundary1, ' ', fit_boundary2)
+
+        results = fourier.Fourier(
+            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+        results.run()
+
+        del fr, t0, results
+
+
 def run_default(config):
 
     # instantiate fast rotation class
@@ -239,5 +267,7 @@ def run_fourier(config):
         run_freq_step_scan(config)
     elif (config['run_noise_threshold_scan']):
         run_noise_threshold_scan(config)
+    elif (config['stat_fluctuation']):
+        run_stat_fluc(config)
     else:
         run_default(config)

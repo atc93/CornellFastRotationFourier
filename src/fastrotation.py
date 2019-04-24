@@ -20,7 +20,7 @@ class FastRotation(configparser.ParseConfig):
 
     def apply_stat_fluctutation(self):
 
-        self.histogram = statFluctuation.poisson(self.histogram)
+        self.histogram = statfluctuation.poisson(self.histogram)
 
         return self.histogram
 
@@ -127,7 +127,7 @@ class FastRotation(configparser.ParseConfig):
 
         # vary statistics in each bin of the input histogram if option specified
         if (self.stat_fluctuation):
-            self.histogram = apply_stat_fluctutation()
+            self.histogram = self.apply_stat_fluctutation()
 
         # rebin fast rotation histogram
         if (self.n_fit_param == 0):

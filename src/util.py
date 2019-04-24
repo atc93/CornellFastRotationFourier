@@ -15,12 +15,12 @@ def fit_bkg(a, b, err):
         return a * np.sin(np.asarray(x-c)/d)/((x-c)/d) + b
 
     try:
-        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.00001, 6800, 50]), sigma=err)
+        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.0000, 6800, 50]), sigma=err)
         fit_status = 1
     except:
         print("Failure to fit the background: trying again")
         try:
-            popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.00001, 6800, 50]), sigma=err)
+            popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.0000, 6800, 50]), sigma=err)
             fit_status = 1
         except:
             print("Failure to fit the background: return -1 fit status")

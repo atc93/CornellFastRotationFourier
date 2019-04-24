@@ -34,3 +34,4 @@ class ParseConfig:
         self.lower_noise_threshold = config['lower_noise_threshold']
         self.upper_noise_threshold = config['upper_noise_threshold']
         self.noise_threshold_step_size = config['noise_threshold_step_size']
+        self.n_stat_fluc = config['n_stat_fluctuation']
