@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import src.util as util
 import numpy as np
 
+plt.rcParams['figure.figsize'] = [9, 6]
+plt.rcParams.update({'font.size': 17})
 
 class Optimize_t0(configparser.ParseConfig):
 
@@ -22,6 +24,7 @@ class Optimize_t0(configparser.ParseConfig):
         # using order higher than 2 in case of scanning
         # over large t0 window leading to non-quadratic
         # behaviors
+
         fit = np.polyfit(x, y, 5)
 
         # create function from fit result
@@ -58,9 +61,12 @@ class Optimize_t0(configparser.ParseConfig):
             opt_chi2 = fit_fn(opt_t0)
 
         # plot the results
-        plt.plot(x, y, 'ro')
+        fig = plt.figure(1)
+        ax = fig.add_subplot(111)
+        plt.subplots_adjust(left=0.125, bottom=0.125, right=0.95, top=0.95, wspace=0, hspace=0)
+        plt.plot(x, y, 'ro', ms=8, zorder=2)
         smoothed_x = np.linspace(min(x), max(x), 100)
-        plt.plot(smoothed_x, fit_fn(smoothed_x), color='black')
+        plt.plot(smoothed_x, fit_fn(smoothed_x), color='black', linewidth=2.5, zorder=1)
         plt.xlabel('$\mathregular{t_{0}}$ [ns]')
         plt.ylabel('$\mathregular{{\chi}^2}}$/d.o.f.')
 
@@ -114,7 +120,11 @@ class Optimize_t0(configparser.ParseConfig):
             # fit the background
             fit = np.polyfit(a, b, self.poly_order, w=err)
 
-            func, popt, pcov = util.fit_bkg(a, b, err)
+            func, popt, pcov, fit_status = util.fit_bkg(a, b, err)
+
+            # skip this iteration because of failed fit
+            if (fit_status == -1):
+                continue
 
             if (self.verbose > 0 ):
                 print('    bkg fit param: ', popt)
@@ -131,11 +141,17 @@ class Optimize_t0(configparser.ParseConfig):
             fit_fn = np.poly1d(fit)
 
             # plot frequency distribution alongside the background and its fit
-            plt.plot(freq, intensity, marker='o', ms=2)
-            plt.plot(freq, fit_fn(freq))
-            plt.plot(freq, func(freq, *popt))
-            plt.errorbar(a, b, yerr=noise_sigma, marker='o', ms=2, markerfacecolor='black',
-                         ecolor='black', markeredgecolor='black', linestyle='')
+            fig = plt.figure(1)
+            ax = fig.add_subplot(111)
+            plt.subplots_adjust(left=0.125, bottom=0.125, right=0.95, top=0.95, wspace=0, hspace=0)
+            plt.plot(freq, intensity, marker='o', ms=5, zorder=1)
+            plt.xlabel('Frequency [kHz]')
+            plt.ylabel('Arbitrary unit')
+            plt.errorbar(a, b, yerr=noise_sigma, marker='o', ms=5, markerfacecolor='black',
+                         ecolor='black', markeredgecolor='black', linestyle='', label='background', zorder=4)
+            plt.plot(freq, fit_fn(freq), label='bkgd poly fit', linewidth=3, zorder=2)
+            plt.plot(freq, func(freq, *popt), label='bkgd sinc fit', linewidth=3, zorder=3)
+            plt.legend(loc="upper right", frameon=False)
 
             # show plot if enabled by config file
             if (self.print_plot):

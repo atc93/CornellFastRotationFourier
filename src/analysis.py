@@ -140,6 +140,11 @@ def run_freq_step_scan(config):
         config['freq_step_size'] = round(config['lower_freq_step_size']+idx_freq *
                                          config['freq_step_size_increment'], 3)
 
+        # check that the number of frequency bins is an integer factor of the freq step size
+        freq_window = int(config['upper_freq']-config['lower_freq'])
+        if not ((freq_window/config['freq_step_size']).is_integer()):
+            continue
+
         # disable saving plots
         config['print_plot'] = False
 

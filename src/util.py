@@ -15,16 +15,19 @@ def fit_bkg(a, b, err):
         return a * np.sin(np.asarray(x-c)/d)/((x-c)/d) + b
 
     try:
-        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.001, 6800, 50]), sigma=err)
+        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.00001, 6800, 50]), sigma=err)
+        fit_status = 1
     except:
         print("Failure to fit the background: trying again")
         try:
-            popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.001, 6800, 50]), sigma=err)
+            popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.00001, 6800, 50]), sigma=err)
+            fit_status = 1
         except:
-            print("Failure to fit the background: exiting program")
-            sys.exit(0)
+            print("Failure to fit the background: return -1 fit status")
+            fit_status = -1
+            return func, fit_status, fit_status, fit_status
 
-    return func, popt, pcov
+    return func, popt, pcov, fit_status
 
 def calc_cosine_transform(t0, binContent, binCenter, freq_step_size, n_freq_step, lower_freq):
 

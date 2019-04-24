@@ -116,7 +116,7 @@ class Fourier(configparser.ParseConfig):
 
         fit = np.polyfit(a, b, self.poly_order, w=err)
 
-        func, popt, pcov = util.fit_bkg(a, b, err)
+        func, popt, pcov, fit_value = util.fit_bkg(a, b, err)
 
         print(popt)
 
