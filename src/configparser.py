@@ -35,3 +35,7 @@ class ParseConfig:
         self.upper_noise_threshold = config['upper_noise_threshold']
         self.noise_threshold_step_size = config['noise_threshold_step_size']
         self.n_stat_fluc = config['n_stat_fluctuation']
+        self.fix_t0 = config['fix_t0']
+        self.fixed_t0_value = config['fixed_t0_value']
+        self.background_correction = config['background_correction']
+        self.remove_background = config['remove_background']

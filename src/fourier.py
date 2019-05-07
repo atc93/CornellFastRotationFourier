@@ -2,6 +2,7 @@ from scipy.optimize import curve_fit
 import src.configparser as configparser
 import src.constants as constants
 import src.plotting as plotting
+import matplotlib.pyplot as plt
 import src.style as style
 import src.util as util
 import numpy as np
@@ -25,6 +26,9 @@ class Fourier(configparser.ParseConfig):
             'cosine', 'cosine', self.n_freq_step, self.lower_freq, self.upper_freq)
         self.sine_histogram = r.TH1D(
             'sine', 'sine', self.n_freq_step, self.lower_freq, self.upper_freq)
+        self.out_file = r.TFile('results/' + self.tag + '/results_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.root'.format(
+                    self.opt_t0, self.tS, self.tM, self.freq_step_size), 'RECREATE')
+
 
         style.setTCanvasStyle(self.canvas)
 
@@ -75,7 +79,7 @@ class Fourier(configparser.ParseConfig):
 
             # style the Fourier transform histogram ==#
             style.setTH1Style(
-                clone_hist_list[idx], histoName[idx], 'Frequency [kHz]', 'Arbitrary', 1.2, 1.3)
+                clone_hist_list[idx], histoName[idx], 'Frequency [kHz]', 'Arbitrary units', 1.2, 1.3)
 
             # define lines to be drawn at collimator apertures (frequency space) ==#
             inner_line, outer_line = style.setCollimatorApertureTLine(
@@ -90,6 +94,8 @@ class Fourier(configparser.ParseConfig):
                             inner_line, outer_line, pt, pt2]
             plotting.plotMultipleObjects('', list_to_draw)
             self.canvas.Draw()
+            self.out_file.cd()
+            clone_hist_list[idx].Write()
 
             # save plot if option provided
             if (idx == 0 and self.print_plot == 1):
@@ -107,9 +113,15 @@ class Fourier(configparser.ParseConfig):
         b = []
 
         for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1):
-            if (self.cosine_histogram.GetBinCenter(bin_idx) < self.fit_boundary1 or self.cosine_histogram.GetBinCenter(bin_idx) > self.fit_boundary2):
-                a.append(self.cosine_histogram.GetBinCenter(bin_idx))
-                b.append(self.cosine_histogram.GetBinContent(bin_idx))
+            if (self.fix_t0):
+                if ( (self.cosine_histogram.GetBinCenter(bin_idx) < self.fit_boundary1 and self.cosine_histogram.GetBinCenter(bin_idx) > constants.lowerCollimatorFreq) or 
+                    (self.cosine_histogram.GetBinCenter(bin_idx) > self.fit_boundary2 and self.cosine_histogram.GetBinCenter(bin_idx) < constants.upperCollimatorFreq)):
+                    a.append(self.cosine_histogram.GetBinCenter(bin_idx))
+                    b.append(self.cosine_histogram.GetBinContent(bin_idx))
+            else:
+                if (self.cosine_histogram.GetBinCenter(bin_idx) < self.fit_boundary1 or self.cosine_histogram.GetBinCenter(bin_idx) > self.fit_boundary2):
+                    a.append(self.cosine_histogram.GetBinCenter(bin_idx))
+                    b.append(self.cosine_histogram.GetBinContent(bin_idx))
 
         # create list with error values for the intensity
         err = [self.noise_sigma]*len(a)
@@ -123,6 +135,12 @@ class Fourier(configparser.ParseConfig):
         r = b - func(a, *popt)
         chi2 = sum((r / err) ** 2)/len(r)
 
+        fig = plt.figure(1)
+        ax = fig.add_subplot(111)
+        plt.subplots_adjust(left=0.125, bottom=0.125, right=0.95, top=0.95, wspace=0, hspace=0)
+        plt.errorbar(a, b, yerr=err, marker='o', ms=5, markerfacecolor='black',
+                     ecolor='black', markeredgecolor='black', linestyle='', label='background', zorder=4)
+
         a = []
         b = []
 
@@ -134,33 +152,51 @@ class Fourier(configparser.ParseConfig):
 
         # compute chi2
         #chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
-        #              self.noise_sigma ** 2)/(len(a)-self.poly_order)
+         #             self.noise_sigma ** 2)/(len(a)-self.poly_order)
+
+        # plot frequency distribution alongside the background and its fit
+        plt.plot(a, b, marker='o', ms=5, zorder=1)
+        plt.xlabel('Frequency [kHz]')
+        plt.ylabel('Arbitrary units')
+        plt.plot(a, func(a, *popt), label='bkgd sinc fit', linewidth=3, zorder=3, color='green')
+        plt.legend(loc="upper right", frameon=False)
+
+        # show plot if enabled by config file
+        if (self.print_plot):
+            plt.savefig('results/' + self.tag + '/Background_fit_t0_{0:.6f}_tS_{1}_tM_{2}_{3}_{4}.eps'.format(
+                        self.opt_t0, self.tS, self.tM, self.fit_boundary1, self.fit_boundary2), format='eps')
 
         return fit, chi2
 
     def correct_transform(self, fit):
 
+        '''TEST
+        ofile = r.TFile('test.root', 'RECREATE')
+        lala = self.cosine_histogram
+        lala.Write()
+        for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1, 1):
+            self.cosine_histogram.SetBinContent(bin_idx, fit[int(bin_idx)-1])
+        self.cosine_histogram.Write('bkg')
+        ofile.Close()
+        END TEST'''
+
         max_amplitude_bin_idx = self.cosine_histogram.GetMaximumBin()
 
-        zero_out = False
         for bin_idx in range(max_amplitude_bin_idx, 0, -1):
             #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.noise_threshold*self.noise_sigma):
-            if ((self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
-                zero_out = True
-            if (zero_out):
+            if (self.remove_background and abs(self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
                 self.cosine_histogram.SetBinContent(bin_idx, 0)
+                print('remove bkg')
             else:
                 #self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
                 #    bin_idx)-np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx)))
                 self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
                     bin_idx)-fit[int(bin_idx)-1])
 
-        zero_out = False
         for bin_idx in range(max_amplitude_bin_idx+1, self.cosine_histogram.GetNbinsX()+1, +1):
             #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.noise_threshold*self.noise_sigma):
-            if ((self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
-                zero_out = True
-            if (zero_out):
+            if (self.remove_background and abs(self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
+                print('remove bkg')
                 self.cosine_histogram.SetBinContent(bin_idx, 0)
             else:
                 #self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
@@ -186,6 +222,8 @@ class Fourier(configparser.ParseConfig):
         list_to_draw = [self.cosine_histogram, inner_line, outer_line, pt, pt2]
         plotting.plotMultipleObjects('', list_to_draw)
         self.canvas.Draw()
+        self.out_file.cd()
+        self.cosine_histogram.Write('corrected_cosine')
 
         #== Compare radial and frequency distribution with truth level ones (if simulated data) ==#
         if (self.compare_with_truth):
@@ -422,11 +460,37 @@ class Fourier(configparser.ParseConfig):
         # produce the cosine (sine) transform
         self.produce_cosine_transform()
 
-        # fit he cosine transform background
-        bkg_fit, chi2 = self.fit_background()
+        if (self.background_correction == 'fit'):
+            # fit he cosine transform background
+            bkg_fit, chi2 = self.fit_background()
 
-        # correct the cosine transform using the fit to the background
-        self.correct_transform(bkg_fit)
+            # correct the cosine transform using the fit to the background
+            self.correct_transform(bkg_fit)
+
+        if (self.background_correction == 'integral'):
+            truth_file = r.TFile(self.truth_root_file)
+            approx = truth_file.Get(self.truth_histo_name)
+            print(approx.GetMean(),' ', approx.GetRMS())
+            parabola = self.cosine_histogram.Clone()
+            util.calc_parabola( self.opt_t0, self.tS, approx, parabola, self.n_freq_step, self.freq_step_size, self.lower_freq)
+            parabola.Draw()
+            self.canvas.Draw()
+            self.canvas.Print('results/' + self.tag + '/parabola.eps')
+            a, b = util.minimization(parabola, self.cosine_histogram, self.n_freq_step, self.fit_boundary1, self.fit_boundary2)
+
+            for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1):
+                parabola.SetBinContent( bin_idx, -1*( a*parabola.GetBinContent(bin_idx)+b) )
+            parabola.Draw()
+            parabola.SetTitle('Integral correction')
+            self.canvas.Draw()
+            self.canvas.Print('results/' + self.tag + '/parabola2.eps')
+
+            for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1):
+                self.cosine_histogram.SetBinContent( bin_idx, self.cosine_histogram.GetBinContent(bin_idx)  + parabola.GetBinContent(bin_idx) )
+
+            print(self.cosine_histogram.GetMean(),' ', self.cosine_histogram.GetRMS())
+
+            chi2 = -1
 
         # convert from frequency to radial distribution
         self.produce_radial(chi2)

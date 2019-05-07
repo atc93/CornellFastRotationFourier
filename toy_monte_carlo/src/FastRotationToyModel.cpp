@@ -28,9 +28,9 @@
 #include <sstream>
 
 // simulation paramaters
-const double N_muon = 10000000;     // number of muons to simulate
-const double N_turn = 6800;			// how many cyclotron revolution to simulate
-const double p_spread = 0.09;      // muon momentum distribution spread in %
+const double N_muon = 1000000;     // number of muons to simulate
+const double N_turn = 2700; // 6800;			// how many cyclotron revolution to simulate
+const double p_spread = 0.00025; //0.09;      // muon momentum distribution spread in %
 const double t_spread = 25;	// muon beam length spread in nano second
 const bool   fillTree = false;      // fill root tree with time, momentum...
 const double detLocation=0.74;       // half-way 
@@ -64,14 +64,14 @@ const int VacBounds     = 0;
 
 // Set time distribution
 const int t_wShape 	= 0;
-const int t_Gaus 	= 0;
-const int t_Asymm       = 1;
+const int t_Gaus 	= 1;
+const int t_Asymm       = 0;
 
 // namespaces
 using namespace std;
 
 // ppre-declaration of functions
-Double_t ComputeTravelTimeMuon(double gamma, double beta, int n, double p_ptcl, double tzero); 
+Double_t ComputeCycloPeriod(double gamma, double beta, double p_ptcl); 
 void DrawATLASLabel(TCanvas* _c);
 
 
@@ -104,8 +104,8 @@ int main() {
     vector<double> v_t_spread;
     TF1 *f1 = new TF1("f1","((sin(50*(x))/(50*(x))+1)*exp(-0.5*((x)/0.3)**2))",-1,1);
     f1->SetNpx(10000);
-    TF1 *f2 = new TF1("f2","(exp(-0.5*((x+0.000)/(0.0006))**2))/(sqrt(2*3.1415926535)*0.0006)",-0.0025,0.0038);
-    TF1 *f4 = new TF1("f4","(exp(-0.5*((x+0.0001)/(0.0006))**2))/(sqrt(2*3.1415926535)*0.0006)",-0.00025,0.001);
+    TF1 *f2 = new TF1("f2","(exp(-0.5*((x+0.00003)/(0.0005))**2))/(sqrt(2*3.1415926535)*0.0005)",-0.0025,0.0038);
+    TF1 *f4 = new TF1("f4","(exp(-0.5*((x+0.0001)/(0.0005))**2))/(sqrt(2*3.1415926535)*0.0005)",-0.00025,0.001);
     //TF1 *f2 = new TF1("f2","(exp(-0.5*((x)/(0.00112))**2))/(sqrt(2*3.1415926535)*0.00112)",-0.0025,0.0025);
     TF1 *f3 = new TF1("f3","(exp(-0.5*((x-15E-9)/(15E-9))**2))/(sqrt(2*3.1415926535)*15E-9)+(exp(-0.5*((x+40E-9)/(20E-9))**2))/(sqrt(2*3.1415926535)*20E-9)",-95E-9,95E-9);
     f3->SetNpx(100000);
@@ -162,8 +162,7 @@ int main() {
     t1 = clock();
     int progress = N_muon / 10;
 
-    // Muon loop
-    double timem1 = 0., timem2 = 0.;
+    double cyclo_period = 0.;
 
     for (int i=0; i<N_muon; ++i) {
 
@@ -180,24 +179,21 @@ int main() {
         // compute beta factor
         beta = p_ptcl / (gamma * M_mu);
 
-        // turn loop
-        timem1 = 0., timem2 = 0.;
+        // compute cyclotron frequency
+        cyclo_period = ComputeCycloPeriod(gamma, beta, p_ptcl); 
+
+        // original time offset
+        double dt = v_t_spread.at(i)*1E6;
+
+        // loop over tusn
         for (int turn=0; turn<N_turn; ++turn) {
-            if (turn>0) {timem1 = timem2;}
-            else {timem1=0;}
-            // compute travel time
-            time= ComputeTravelTimeMuon(gamma, beta, turn, p_ptcl, v_t_spread.at(i)); timem2 = time;
 
-            if (DEBUG) cout << "time = " << time << "   -   turn = " << turn << endl;
-
-            // fill ROOT Tree if enabled
-            if (fillTree) tr->Fill();
-
-            // fill histogram
+            time = (detLocation + turn) * cyclo_period + dt;
             h_frs->Fill(time);
-            h_freq->Fill(1E3*1/(timem2-timem1));
 
         } // end turn loop
+
+        h_freq->Fill(1E3/cyclo_period);
 
         // Monitor progress
         if(i % progress == 0){
@@ -259,11 +255,11 @@ int main() {
 // - longitudinal initial beam width
 // - momentum spread
 
-Double_t ComputeTravelTimeMuon(double gamma, double beta, int n, double p_ptcl, double tzero) {
+Double_t ComputeCycloPeriod(double gamma, double beta, double p_ptcl) {
 
     double rho = p_ptcl / (c_light * 1E-9 * B) *1000;
     double t = 2*PI*rho / ( beta*c_light);
-    return (detLocation + n) * t*1E3 + tzero*1E6;
+    return t*1E3;
 
 }
 

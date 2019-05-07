@@ -13,19 +13,19 @@ def fit_bkg(a, b, err):
 
     def func(x,a,b,c,d):
         return a * np.sin(np.asarray(x-c)/d)/((x-c)/d) + b
+        #x = np.asarray(x-d)
+        #func = -a*x + (a*x)**3/18 - (a*x)**5/600 + (a*x)**7/35280 - (a*x)**9/3265920
+        #func = b*func+ c
+        #return func
 
     try:
-        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.0000, 6800, 50]), sigma=err)
+        #popt, pcov = curve_fit(func, a, b, bounds=([0,-10000,-10, 6600],[10, 0,10, 6800]), sigma=err, maxfev=1000000)
+        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6695, 5],[0, -0.0000, 6715, 50]), sigma=err, maxfev=1000)
         fit_status = 1
     except:
-        print("Failure to fit the background: trying again")
-        try:
-            popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6600, 5],[0, -0.0000, 6800, 50]), sigma=err)
-            fit_status = 1
-        except:
-            print("Failure to fit the background: return -1 fit status")
-            fit_status = -1
-            return func, fit_status, fit_status, fit_status
+        print("Failure to fit the background: return -1 fit status")
+        fit_status = -1
+        return func, fit_status, fit_status, fit_status
 
     return func, popt, pcov, fit_status
 
@@ -59,9 +59,9 @@ def calc_sine_transform(t0, binContent, binCenter):
 
     return a, b
 
+
 # convert Frequency to Radius ==#
 # assume velocity corresponding to magic momentum for all the muons. Velocity depends very little on momentum ==#
-
 
 def convert_freq_to_radius(freqHist, radius, intensity, n_freq_step):
     for i in range(1, n_freq_step+1):
@@ -71,12 +71,11 @@ def convert_freq_to_radius(freqHist, radius, intensity, n_freq_step):
 
 
 # compute the parabola correction distribution
-def calc_parabola(t0, tS, firstApprox, parabola):
-    for i in range(0, constants.nFreq):
-        frq = (constants.lower_freq + constants.freq_step/2) + \
-            i*constants.freq_step  # in MHz
+def calc_parabola(t0, tS, firstApprox, parabola, n_freq_step, freq_step_size, lower_freq):
+    for i in range(0, n_freq_step):
+        frq = (lower_freq + freq_step_size/2) + i*freq_step_size  # in MHz
         integral = 0
-        for j in range(1, constants.nFreq+1):
+        for j in range(1, n_freq_step+1):
             if (firstApprox.GetBinCenter(j)-frq) != 0:
                 integral += firstApprox.GetBinContent(j)*np.sin(2*math.pi*(
                     frq-firstApprox.GetBinCenter(j))*(tS-t0)/1000)/(1000*(frq-firstApprox.GetBinCenter(j)))
@@ -87,17 +86,19 @@ def calc_parabola(t0, tS, firstApprox, parabola):
 
 
 # perform the background minimization
-def minimization(parabola, cosine):
+def minimization(parabola, cosine, n_freq_step, fit_boundary1, fit_boundary2):
 
     x = []
     y = []
 
-    for i in range(1, constants.nFreq+1):
-        if (cosine.GetBinCenter(i) < constants.lowerCollimatorFreq or cosine.GetBinCenter(i) > constants.upperCollimatorFreq):
-            x.append(parabola.GetBinContent(i))
-            y.append(cosine.GetBinContent(i))
-            x.append(parabola.GetBinContent(i))
-            y.append(cosine.GetBinContent(i))
+    for bin_idx in range(1, n_freq_step+1):
+        if ( (cosine.GetBinCenter(bin_idx) <fit_boundary1 and cosine.GetBinCenter(bin_idx) > constants.lowerCollimatorFreq) or
+                (cosine.GetBinCenter(bin_idx) > fit_boundary2 and cosine.GetBinCenter(bin_idx) < constants.upperCollimatorFreq)):
+        #if (cosine.GetBinCenter(bin_idx) < constants.lowerCollimatorFreq or cosine.GetBinCenter(bin_idx) > constants.upperCollimatorFreq):
+            x.append(parabola.GetBinContent(bin_idx))
+            y.append(cosine.GetBinContent(bin_idx))
+            x.append(parabola.GetBinContent(bin_idx))
+            y.append(cosine.GetBinContent(bin_idx))
 
     A = np.vstack([x, np.ones(len(x))]).T
     m, c = np.linalg.lstsq(A, y, rcond=-1)[0]
@@ -148,6 +149,7 @@ def print_welcome_message():
 
 def rootHistToNumpArray(hist, tS, tM):
 
+    print(tS)
     startBin = hist.FindBin(tS)
     endBin = hist.FindBin(tM)
 

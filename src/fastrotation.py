@@ -17,6 +17,36 @@ class FastRotation(configparser.ParseConfig):
         super(FastRotation, self).__init__(config)
         self.times_to_plot = [1, 10, 50, 100, 200, self.tM]
         self.canvas = r.TCanvas('c', 'c', 900, 600)
+        self.out_file = r.TFile('results/' + self.tag + '/fastrotation.root','RECREATE')
+
+    def optimize_tS_tM(self):
+
+        # reset range user
+        self.histogram.GetXaxis().SetRangeUser(1, self.histogram.GetNbinsX())
+
+        # refine ts: we want ts corresponding to a signal intensity of 1
+        # to match the intensity of 1 at late time (modulo the noise)
+        min_bin = self.histogram.FindBin(self.tS-0.100)
+        max_bin = self.histogram.FindBin(self.tS+0.100)
+        delta = 999
+        opt_tS = -1
+        for bin_idx in range(min_bin, max_bin+1):
+            if (abs(self.histogram.GetBinContent(bin_idx)-1) < delta):
+                delta = abs(self.histogram.GetBinContent(bin_idx)-1)
+                opt_tS = self.histogram.GetBinCenter(bin_idx)
+
+        print(self.tM)
+        min_bin = self.histogram.FindBin(self.tM-0.30)
+        max_bin = self.histogram.FindBin(self.tM+0.30)
+        print(min_bin, ' ', max_bin)
+        delta = 999
+        opt_tM = -1
+        for bin_idx in range(min_bin, max_bin+1):
+            if (abs(self.histogram.GetBinContent(bin_idx)-1) < delta):
+                delta = abs(self.histogram.GetBinContent(bin_idx)-1)
+                opt_tM = self.histogram.GetBinCenter(bin_idx)
+
+        return opt_tS, opt_tM
 
     def apply_stat_fluctutation(self):
 
@@ -141,7 +171,11 @@ class FastRotation(configparser.ParseConfig):
 
         # return histogram if no need for fit
         if (self.n_fit_param == 0):
-            return (self.return_frs_np_array(self.histogram))
+
+            opt_tS, opt_tM = self.optimize_tS_tM()
+            bin_center, bin_content = self.return_frs_np_array(self.histogram)
+
+            return opt_tS, opt_tM, bin_center, bin_content
 
         # clone input histogram to produce wiggle plot
         wiggle_histogram = self.histogram.Clone()
@@ -180,10 +214,20 @@ class FastRotation(configparser.ParseConfig):
         # rebin fast rotation histogram
         self.histogram.Rebin(self.rebin_frs_factor)
 
-        # plot fitted wiggle plot if option specified
+        opt_tS, opt_tM = self.optimize_tS_tM()
+
+        # plot frs plot if option specified
         if (self.print_plot):
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, self.histogram, self.tag +
-                              '/FRS', self.tS, self.tS + time, self.tM)
+                              '/FRS', round(opt_tS, 6), round(opt_tS + time, 6), round(opt_tM, 6))
 
-        return (self.return_frs_np_array(self.histogram))
+        plotting.plot(self.canvas, self.histogram, self.tag + '/FRS', 0, 10, self.tM)
+
+        # save signal to ROOT file
+        self.out_file.cd()
+        self.histogram.Write('fr')
+
+        bin_center, bin_content = self.return_frs_np_array(self.histogram)
+
+        return opt_tS, opt_tM, bin_center, bin_content

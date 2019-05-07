@@ -110,7 +110,22 @@ class Optimize_t0(configparser.ParseConfig):
             b = []
 
             for x, y in zip(freq, intensity):
-                if (x < fit_bound1 or x > fit_bound2):
+
+                if (self.fix_t0):
+                    if (fit_bound1 > constants.lowerCollimatorFreq):
+                        lower_fit_bound1 = constants.lowerCollimatorFreq
+                    else:
+                        lower_fit_bound1 = self.lower_freq
+
+                    if (fit_bound2 < constants.upperCollimatorFreq):
+                        upper_fit_bound2 = constants.upperCollimatorFreq
+                    else:
+                        upper_fit_bound2 = self.upper_freq
+                else:
+                    lower_fit_bound1 = self.lower_freq
+                    upper_fit_bound2 = self.upper_freq
+
+                if ( (x > lower_fit_bound1 and x < fit_bound1) or (x > fit_bound2 and x < upper_fit_bound2)):
                     a.append(x)
                     b.append(y)
 
@@ -121,6 +136,19 @@ class Optimize_t0(configparser.ParseConfig):
             fit = np.polyfit(a, b, self.poly_order, w=err)
 
             func, popt, pcov, fit_status = util.fit_bkg(a, b, err)
+
+            def odd_pol(x,a,b,c,d,e):
+                x = np.asarray(x)
+                #return func(x,*popt) + a*x + b*x**3 + c*x**5 + d*x**7 + e
+                return func(x,*popt) * ( b*x**3 + c*x**5 + d*x**7 + e )
+
+            #popt2, pcov2 = curve_fit(odd_pol, a, b, sigma=err, maxfev=1000)
+
+            def even_pol(x,a,b,c,d,e):
+                x = np.asarray(x)
+                return odd_pol(x,*popt2) #+ e #a*x**2 + b*x**4 + c*x**6 + d*x**8 + e
+
+            #popt3, pcov3 = curve_fit(even_pol, a, b, sigma=err, maxfev=1000)
 
             # skip this iteration because of failed fit
             if (fit_status == -1):
@@ -146,10 +174,10 @@ class Optimize_t0(configparser.ParseConfig):
             plt.subplots_adjust(left=0.125, bottom=0.125, right=0.95, top=0.95, wspace=0, hspace=0)
             plt.plot(freq, intensity, marker='o', ms=5, zorder=1)
             plt.xlabel('Frequency [kHz]')
-            plt.ylabel('Arbitrary unit')
+            plt.ylabel('Arbitrary units')
             plt.errorbar(a, b, yerr=noise_sigma, marker='o', ms=5, markerfacecolor='black',
                          ecolor='black', markeredgecolor='black', linestyle='', label='background', zorder=4)
-            plt.plot(freq, fit_fn(freq), label='bkgd poly fit', linewidth=3, zorder=2)
+            #plt.plot(freq, fit_fn(freq), label='bkgd poly O(5) fit', linewidth=3, zorder=2)
             plt.plot(freq, func(freq, *popt), label='bkgd sinc fit', linewidth=3, zorder=3)
             plt.legend(loc="upper right", frameon=False)
 
