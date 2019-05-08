@@ -26,8 +26,8 @@ class FastRotation(configparser.ParseConfig):
 
         # refine ts: we want ts corresponding to a signal intensity of 1
         # to match the intensity of 1 at late time (modulo the noise)
-        min_bin = self.histogram.FindBin(self.tS-0.100)
-        max_bin = self.histogram.FindBin(self.tS+0.100)
+        min_bin = self.histogram.FindBin(self.tS-0.030)
+        max_bin = self.histogram.FindBin(self.tS+0.030)
         delta = 999
         opt_tS = -1
         for bin_idx in range(min_bin, max_bin+1):
@@ -36,8 +36,8 @@ class FastRotation(configparser.ParseConfig):
                 opt_tS = self.histogram.GetBinCenter(bin_idx)
 
         print(self.tM)
-        min_bin = self.histogram.FindBin(self.tM-0.30)
-        max_bin = self.histogram.FindBin(self.tM+0.30)
+        min_bin = self.histogram.FindBin(self.tM-0.100)
+        max_bin = self.histogram.FindBin(self.tM+0.100)
         print(min_bin, ' ', max_bin)
         delta = 999
         opt_tM = -1
