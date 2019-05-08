@@ -130,7 +130,10 @@ def run_t0_scan(config):
     # instantiate fast rotation class
     fr = fastrotation.FastRotation(config)
     # class method returns numpy arrays of the fast rotation signal
-    bin_center, bin_content = fr.produce()
+    opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+
+    config['tS'] = round(opt_tS, 6)
+    config['tM'] = round(opt_tM, 6)
 
     # instantiate t0 optimization class
     t0 = t0optimization.Optimize_t0(config, bin_center, bin_content)
