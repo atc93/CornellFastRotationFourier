@@ -260,7 +260,13 @@ def run_stat_fluc(config):
         # instantiate fast rotation class
         fr = fastrotation.FastRotation(config)
         # class method returns numpy arrays of the fast rotation signal
-        bin_center, bin_content = fr.produce()
+        opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+
+        save_default_tM = config['tM']
+        save_default_tS = config['tS']
+
+        config['tS'] = round(opt_tS, 6)
+        config['tM'] = round(opt_tM, 6)
 
         # instantiate t0 optimization class
         t0 = t0optimization.Optimize_t0(config, bin_center, bin_content)
@@ -277,6 +283,9 @@ def run_stat_fluc(config):
         results.run()
 
         del fr, t0, results
+
+        config['tM'] = save_default_tM
+        config['tS'] = save_default_tS
 
 
 def run_default(config):
