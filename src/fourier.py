@@ -28,6 +28,7 @@ class Fourier(configparser.ParseConfig):
             'sine', 'sine', self.n_freq_step, self.lower_freq, self.upper_freq)
         self.out_file = r.TFile('results/' + self.tag + '/results_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.root'.format(
                     self.opt_t0, self.tS, self.tM, self.freq_step_size), 'RECREATE')
+        self.out_file2 = r.TFile('results/' + self.tag + '/results.root', 'RECREATE')
 
 
         style.setTCanvasStyle(self.canvas)
@@ -95,6 +96,8 @@ class Fourier(configparser.ParseConfig):
             plotting.plotMultipleObjects('', list_to_draw)
             self.canvas.Draw()
             self.out_file.cd()
+            clone_hist_list[idx].Write()
+            self.out_file2.cd()
             clone_hist_list[idx].Write()
 
             # save plot if option provided
@@ -223,6 +226,8 @@ class Fourier(configparser.ParseConfig):
         plotting.plotMultipleObjects('', list_to_draw)
         self.canvas.Draw()
         self.out_file.cd()
+        self.cosine_histogram.Write('corrected_cosine')
+        self.out_file2.cd()
         self.cosine_histogram.Write('corrected_cosine')
 
         #== Compare radial and frequency distribution with truth level ones (if simulated data) ==#
@@ -437,6 +442,11 @@ class Fourier(configparser.ParseConfig):
         if (self.print_plot == 1):
             self.canvas.Print(
                 'results/' + self.tag + '/RadialBeamCoordinate_t0_{0:.5f}_tS_{1}_tM_{2}.eps'.format(self.opt_t0, self.tS, self.tM))
+
+        self.out_file.cd()
+        graph.Write('rad')
+        self.out_file2.cd()
+        graph.Write('rad')
 
         # convert equilibrium radius from ring to beam coordinate
         eq_radius -= constants.magicR

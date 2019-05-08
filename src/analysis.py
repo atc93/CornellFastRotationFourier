@@ -88,6 +88,7 @@ def run_tM_scan(config):
         print(opt_tS, ' ', opt_tM)
 
         save_default_tM = config['tM']
+        save_default_tS = config['tS']
 
         config['tS'] = round(opt_tS, 6)
         config['tM'] = round(opt_tM, 6)
@@ -111,6 +112,7 @@ def run_tM_scan(config):
         del fr, t0, results
 
         config['tM'] = save_default_tM
+        config['tS'] = save_default_tS
 
 
 def run_t0_scan(config):
