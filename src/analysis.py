@@ -299,6 +299,8 @@ def run_stat_fluc(config):
 
         print(opt_t0, ' ', chi2, ' ', noise, ' ', fit_boundary1, ' ', fit_boundary2)
 
+        config['print_plot'] = True
+
         results = fourier.Fourier(
             config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
         results.run()
