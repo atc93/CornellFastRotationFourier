@@ -305,6 +305,8 @@ def run_stat_fluc(config):
             config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
         results.run()
 
+        config['print_plot'] = False
+
         del fr, t0, results
 
         config['tM'] = save_default_tM
