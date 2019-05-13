@@ -216,11 +216,11 @@ def run_freq_step_scan(config):
         config['tS'] = save_default_tS
 
 
-def run_noise_threshold_scan(config):
+def run_background_threshold_scan(config):
 
     # compute number of iterations for frequency step size scan
     n_noise_step = round(
-        (config['upper_noise_threshold']-config['lower_noise_threshold'])/config['noise_threshold_step_size'])+1
+        (config['upper_background_threshold']-config['lower_background_threshold'])/config['background_threshold_step_size'])+1
 
     # append results in output text file
     config['append_results'] = True
@@ -229,8 +229,8 @@ def run_noise_threshold_scan(config):
     for idx_noise in range(0, n_noise_step):
 
         # set noise threshold
-        config['noise_threshold'] = round(config['lower_noise_threshold']+idx_noise *
-                                         config['noise_threshold_step_size'], 3)
+        config['background_threshold'] = round(config['lower_background_threshold']+idx_noise *
+                                         config['background_threshold_step_size'], 3)
 
         # disable saving plots
         config['print_plot'] = False
@@ -323,8 +323,6 @@ def run_default(config):
     config['tS'] = round(opt_tS, 6)
     config['tM'] = round(opt_tM, 6)
 
-    print(config['tS'] , ' ', config['tM'])
-
     # instantiate t0 optimization class
     t0 = t0optimization.Optimize_t0(config, bin_center, bin_content)
     # iterative optimization of t0 (2 iterations are usually enough)
@@ -350,8 +348,8 @@ def run_fourier(config):
         run_t0_scan(config)
     elif (config['run_freq_step_scan']):
         run_freq_step_scan(config)
-    elif (config['run_noise_threshold_scan']):
-        run_noise_threshold_scan(config)
+    elif (config['run_background_threshold_scan']):
+        run_background_threshold_scan(config)
     elif (config['stat_fluctuation']):
         run_stat_fluc(config)
     else:

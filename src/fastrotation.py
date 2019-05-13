@@ -35,10 +35,8 @@ class FastRotation(configparser.ParseConfig):
                 delta = abs(self.histogram.GetBinContent(bin_idx)-1)
                 opt_tS = self.histogram.GetBinCenter(bin_idx)
 
-        print(self.tM)
         min_bin = self.histogram.FindBin(self.tM-0.100)
         max_bin = self.histogram.FindBin(self.tM+0.100)
-        print(min_bin, ' ', max_bin)
         delta = 999
         opt_tM = -1
         for bin_idx in range(min_bin, max_bin+1):
@@ -128,7 +126,7 @@ class FastRotation(configparser.ParseConfig):
         wiggle_histogram.Fit('nine_param_fit', 'REMQ')
 
         if (self.verbose > 1):
-            print('\n=== 5-parameter fit ===\n')
+            print('\n=== 9-parameter fit ===\n')
             print('N0 = ', nine_param_fit.GetParameter(0))
             print('Lifetime muon = ', nine_param_fit.GetParameter(1))
             print('Acos = ', nine_param_fit.GetParameter(2))
@@ -136,8 +134,8 @@ class FastRotation(configparser.ParseConfig):
             print('Omega_a = ', nine_param_fit.GetParameter(3))
             print('Lifetime cbo = ', nine_param_fit.GetParameter(5))
             print('Acos cbo = ', nine_param_fit.GetParameter(6))
-            print('Asin cbo = ', nine_param_fit.GetParameter(7))
-            print('Omega cbo = ', nine_param_fit.GetParameter(8))
+            print('Asin cbo = ', nine_param_fit.GetParameter(8))
+            print('Omega cbo = ', nine_param_fit.GetParameter(7))
 
         return wiggle_fit
 
@@ -218,11 +216,10 @@ class FastRotation(configparser.ParseConfig):
 
         # plot frs plot if option specified
         if (self.print_plot):
+            plotting.plot(self.canvas, self.histogram, self.tag + '/FRS', 0, 10, self.tM)
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, self.histogram, self.tag +
                               '/FRS', round(opt_tS, 6), round(opt_tS + time, 6), round(opt_tM, 6))
-
-        plotting.plot(self.canvas, self.histogram, self.tag + '/FRS', 0, 10, self.tM)
 
         # save signal to ROOT file
         self.out_file.cd()

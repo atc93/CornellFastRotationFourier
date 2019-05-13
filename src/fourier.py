@@ -116,12 +116,12 @@ class Fourier(configparser.ParseConfig):
         b = []
 
         for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1):
-            if (self.fix_t0):
+            if (self.background_frequencies == 'physical'):
                 if ( (self.cosine_histogram.GetBinCenter(bin_idx) < self.fit_boundary1 and self.cosine_histogram.GetBinCenter(bin_idx) > constants.lowerCollimatorFreq) or 
                     (self.cosine_histogram.GetBinCenter(bin_idx) > self.fit_boundary2 and self.cosine_histogram.GetBinCenter(bin_idx) < constants.upperCollimatorFreq)):
                     a.append(self.cosine_histogram.GetBinCenter(bin_idx))
                     b.append(self.cosine_histogram.GetBinContent(bin_idx))
-            else:
+            elif (self.background_frequencies == 'all'):
                 if (self.cosine_histogram.GetBinCenter(bin_idx) < self.fit_boundary1 or self.cosine_histogram.GetBinCenter(bin_idx) > self.fit_boundary2):
                     a.append(self.cosine_histogram.GetBinCenter(bin_idx))
                     b.append(self.cosine_histogram.GetBinContent(bin_idx))
@@ -186,10 +186,9 @@ class Fourier(configparser.ParseConfig):
         max_amplitude_bin_idx = self.cosine_histogram.GetMaximumBin()
 
         for bin_idx in range(max_amplitude_bin_idx, 0, -1):
-            #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.noise_threshold*self.noise_sigma):
-            if (self.remove_background and abs(self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
+            #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.t0_background_threshold*self.noise_sigma):
+            if (self.remove_background and abs(self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.background_removal_threshold*self.noise_sigma):
                 self.cosine_histogram.SetBinContent(bin_idx, 0)
-                print('remove bkg')
             else:
                 #self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
                 #    bin_idx)-np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx)))
@@ -197,9 +196,8 @@ class Fourier(configparser.ParseConfig):
                     bin_idx)-fit[int(bin_idx)-1])
 
         for bin_idx in range(max_amplitude_bin_idx+1, self.cosine_histogram.GetNbinsX()+1, +1):
-            #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.noise_threshold*self.noise_sigma):
-            if (self.remove_background and abs(self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.noise_threshold*self.noise_sigma):
-                print('remove bkg')
+            #if ((self.cosine_histogram.GetBinContent(bin_idx) - np.polyval(fit, self.cosine_histogram.GetBinCenter(bin_idx))) < self.t0_background_threshold*self.noise_sigma):
+            if (self.remove_background and abs(self.cosine_histogram.GetBinContent(bin_idx) - fit[int(bin_idx)-1]) < self.background_removal_threshold*self.noise_sigma):
                 self.cosine_histogram.SetBinContent(bin_idx, 0)
             else:
                 #self.cosine_histogram.SetBinContent(bin_idx, self.cosine_histogram.GetBinContent(
@@ -459,8 +457,9 @@ class Fourier(configparser.ParseConfig):
             results_text_file = open(
                 str('results/' + self.tag + '/results.txt'), "w")
 
-        results_text_file.write('t0 %f chi2 %f noise %f noise_threshold %f tS %f tM %f df %f fieldIndex %f eq_radius %f std %f c_e %f \n' %
-                                (self.opt_t0, chi2, self.noise_sigma, self.noise_threshold, self.tS, self.tM, self.freq_step_size, self.field_index, eq_radius, std, c_e))
+        results_text_file.write('t0 %f chi2 %f noise %f t0_bkg_th %f bkg_rev_t %f tS %f tM %f df %f fieldIndex %f eq_radius %f std %f c_e %f \n' %
+                                (self.opt_t0, chi2, self.noise_sigma, self.t0_background_threshold, self.background_removal_threshold, 
+                                self.tS, self.tM, self.freq_step_size, self.field_index, eq_radius, std, c_e))
 
     def run(self):
 

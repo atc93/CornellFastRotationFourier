@@ -111,7 +111,7 @@ class Optimize_t0(configparser.ParseConfig):
 
             for x, y in zip(freq, intensity):
 
-                if (self.fix_t0):
+                if (self.background_frequencies == 'physical'):
                     if (fit_bound1 > constants.lowerCollimatorFreq):
                         lower_fit_bound1 = constants.lowerCollimatorFreq
                     else:
@@ -121,7 +121,7 @@ class Optimize_t0(configparser.ParseConfig):
                         upper_fit_bound2 = constants.upperCollimatorFreq
                     else:
                         upper_fit_bound2 = self.upper_freq
-                else:
+                elif (self.background_frequencies == 'all'):
                     lower_fit_bound1 = self.lower_freq
                     upper_fit_bound2 = self.upper_freq
 
@@ -196,16 +196,16 @@ class Optimize_t0(configparser.ParseConfig):
 
             # optimize the fit boundaries using noise_sigma and the noise threshold
             for i in range(int(len(freq)/2-1), 0, -1):
-                #if (intensity[i]-np.polyval(fit, freq[i]) < self.noise_threshold*noise_sigma):
-                if (intensity[i]-func(freq[i], *popt) < self.noise_threshold*noise_sigma):
+                #if (intensity[i]-np.polyval(fit, freq[i]) < self.t0_background_threshold*noise_sigma):
+                if (intensity[i]-func(freq[i], *popt) < self.t0_background_threshold*noise_sigma):
                     opt_bound1 = freq[i]
                     break
                 else:
                     opt_bound1 = constants.lowerCollimatorFreq
 
             for i in range(int(len(freq)/2), int(len(freq)), +1):
-                #if (intensity[i]-np.polyval(fit, freq[i]) < self.noise_threshold*noise_sigma):
-                if (intensity[i]-func(freq[i], *popt) < self.noise_threshold*noise_sigma):
+                #if (intensity[i]-np.polyval(fit, freq[i]) < self.t0_background_threshold*noise_sigma):
+                if (intensity[i]-func(freq[i], *popt) < self.t0_background_threshold*noise_sigma):
                     opt_bound2 = freq[i]
                     break
                 else:
