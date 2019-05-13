@@ -117,12 +117,12 @@ class Fourier(configparser.ParseConfig):
 
         for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1):
             if (self.background_frequencies == 'physical'):
-                if ( (self.cosine_histogram.GetBinCenter(bin_idx) < self.fit_boundary1 and self.cosine_histogram.GetBinCenter(bin_idx) > constants.lowerCollimatorFreq) or 
-                    (self.cosine_histogram.GetBinCenter(bin_idx) > self.fit_boundary2 and self.cosine_histogram.GetBinCenter(bin_idx) < constants.upperCollimatorFreq)):
+                if ( (self.cosine_histogram.GetBinCenter(bin_idx) <= self.fit_boundary1 and self.cosine_histogram.GetBinCenter(bin_idx) >= constants.lowerCollimatorFreq) or 
+                    (self.cosine_histogram.GetBinCenter(bin_idx) >= self.fit_boundary2 and self.cosine_histogram.GetBinCenter(bin_idx) <= constants.upperCollimatorFreq)):
                     a.append(self.cosine_histogram.GetBinCenter(bin_idx))
                     b.append(self.cosine_histogram.GetBinContent(bin_idx))
             elif (self.background_frequencies == 'all'):
-                if (self.cosine_histogram.GetBinCenter(bin_idx) < self.fit_boundary1 or self.cosine_histogram.GetBinCenter(bin_idx) > self.fit_boundary2):
+                if (self.cosine_histogram.GetBinCenter(bin_idx) <= self.fit_boundary1 or self.cosine_histogram.GetBinCenter(bin_idx) >= self.fit_boundary2):
                     a.append(self.cosine_histogram.GetBinCenter(bin_idx))
                     b.append(self.cosine_histogram.GetBinContent(bin_idx))
 

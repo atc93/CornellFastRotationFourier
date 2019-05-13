@@ -229,7 +229,7 @@ def run_background_threshold_scan(config):
     for idx_noise in range(0, n_noise_step):
 
         # set noise threshold
-        config['background_threshold'] = round(config['lower_background_threshold']+idx_noise *
+        config['t0_background_threshold'] = round(config['lower_background_threshold']+idx_noise *
                                          config['background_threshold_step_size'], 3)
 
         # disable saving plots

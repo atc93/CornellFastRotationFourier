@@ -197,7 +197,7 @@ class Optimize_t0(configparser.ParseConfig):
             # optimize the fit boundaries using noise_sigma and the noise threshold
             for i in range(int(len(freq)/2-1), 0, -1):
                 #if (intensity[i]-np.polyval(fit, freq[i]) < self.t0_background_threshold*noise_sigma):
-                if (intensity[i]-func(freq[i], *popt) < self.t0_background_threshold*noise_sigma):
+                if (abs(intensity[i]-func(freq[i], *popt)) < self.t0_background_threshold*noise_sigma):
                     opt_bound1 = freq[i]
                     break
                 else:
@@ -205,7 +205,7 @@ class Optimize_t0(configparser.ParseConfig):
 
             for i in range(int(len(freq)/2), int(len(freq)), +1):
                 #if (intensity[i]-np.polyval(fit, freq[i]) < self.t0_background_threshold*noise_sigma):
-                if (intensity[i]-func(freq[i], *popt) < self.t0_background_threshold*noise_sigma):
+                if (abs(intensity[i]-func(freq[i], *popt)) < self.t0_background_threshold*noise_sigma):
                     opt_bound2 = freq[i]
                     break
                 else:
@@ -221,8 +221,8 @@ class Optimize_t0(configparser.ParseConfig):
             chi2_list.append(chi2)
             #noise_list.append(np.std(residuals))
             noise_list.append(np.std(r))
-            bound1_list.append(opt_bound1)
-            bound2_list.append(opt_bound2)
+            bound1_list.append(round(opt_bound1, 8)) # important to round not to have a random last digit like 6733.000000000001
+            bound2_list.append(round(opt_bound2, 8)) # important to round not to have a random last digit like 6733.000000000001
 
         return (t0_list, chi2_list, noise_list, bound1_list, bound2_list)
 
