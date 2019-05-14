@@ -129,14 +129,13 @@ class Fourier(configparser.ParseConfig):
         # create list with error values for the intensity
         err = [self.noise_sigma]*len(a)
 
-        fit = np.polyfit(a, b, self.poly_order, w=err)
-
-        func, popt, pcov, fit_value = util.fit_bkg(a, b, err)
-
-        print(popt)
-
-        r = b - func(a, *popt)
-        chi2 = sum((r / err) ** 2)/len(r)
+        if (self.background_fit == 'pol'):
+            fit = np.polyfit(a, b, self.poly_order, w=err)
+            chi2 = np.sum((np.polyval(fit, a) - b) ** 2 / self.noise_sigma ** 2)/(len(a)-self.poly_order)
+        elif (self.background_fit == 'sinc'):
+            func, popt, pcov, fit_value = util.fit_bkg(a, b, err)
+            r = b - func(a, *popt)
+            chi2 = sum((r / err) ** 2)/len(r)
 
         fig = plt.figure(1)
         ax = fig.add_subplot(111)
@@ -151,17 +150,17 @@ class Fourier(configparser.ParseConfig):
                 a.append(self.cosine_histogram.GetBinCenter(bin_idx))
                 b.append(self.cosine_histogram.GetBinContent(bin_idx))
 
-        fit = func(a, *popt)
-
-        # compute chi2
-        #chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
-         #             self.noise_sigma ** 2)/(len(a)-self.poly_order)
+        if (self.background_fit == 'pol'):
+            fit = np.poly1d(fit)
+            fit = fit(a)
+        elif (self.background_fit == 'sinc'):
+            fit = func(a, *popt)
 
         # plot frequency distribution alongside the background and its fit
         plt.plot(a, b, marker='o', ms=5, zorder=1)
         plt.xlabel('Frequency [kHz]')
         plt.ylabel('Arbitrary units')
-        plt.plot(a, func(a, *popt), label='bkgd sinc fit', linewidth=3, zorder=3, color='green')
+        plt.plot(a, fit, label='bkgd sinc fit', linewidth=3, zorder=3, color='green')
         plt.legend(loc="upper right", frameon=False)
 
         # show plot if enabled by config file
@@ -479,7 +478,6 @@ class Fourier(configparser.ParseConfig):
         if (self.background_correction == 'integral'):
             truth_file = r.TFile(self.truth_root_file)
             approx = truth_file.Get(self.truth_histo_name)
-            print(approx.GetMean(),' ', approx.GetRMS())
             parabola = self.cosine_histogram.Clone()
             util.calc_parabola( self.opt_t0, self.tS, approx, parabola, self.n_freq_step, self.freq_step_size, self.lower_freq)
             parabola.Draw()
@@ -496,8 +494,6 @@ class Fourier(configparser.ParseConfig):
 
             for bin_idx in range(1, self.cosine_histogram.GetNbinsX()+1):
                 self.cosine_histogram.SetBinContent( bin_idx, self.cosine_histogram.GetBinContent(bin_idx)  + parabola.GetBinContent(bin_idx) )
-
-            print(self.cosine_histogram.GetMean(),' ', self.cosine_histogram.GetRMS())
 
             chi2 = -1
 

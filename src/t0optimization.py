@@ -133,40 +133,29 @@ class Optimize_t0(configparser.ParseConfig):
             err = [noise_sigma]*len(a)
 
             # fit the background
-            fit = np.polyfit(a, b, self.poly_order, w=err)
+            if (self.background_fit == 'pol'):
+                fit = np.polyfit(a, b, self.poly_order, w=err)
+                chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
+                          noise_sigma ** 2)/(len(a)-self.poly_order)
+                # create function from fit results
+                fit_fn = np.poly1d(fit)
+                # estimate the noise from fit residuals
+                residuals = []
+                for i in range(len(a)):
+                    residuals.append(np.polyval(fit, a[i])-b[i])
+                fit_status = 1
 
-            func, popt, pcov, fit_status = util.fit_bkg(a, b, err)
-
-            def odd_pol(x,a,b,c,d,e):
-                x = np.asarray(x)
-                #return func(x,*popt) + a*x + b*x**3 + c*x**5 + d*x**7 + e
-                return func(x,*popt) * ( b*x**3 + c*x**5 + d*x**7 + e )
-
-            #popt2, pcov2 = curve_fit(odd_pol, a, b, sigma=err, maxfev=1000)
-
-            def even_pol(x,a,b,c,d,e):
-                x = np.asarray(x)
-                return odd_pol(x,*popt2) #+ e #a*x**2 + b*x**4 + c*x**6 + d*x**8 + e
-
-            #popt3, pcov3 = curve_fit(even_pol, a, b, sigma=err, maxfev=1000)
+            if (self.background_fit == 'sinc'):
+                func, popt, pcov, fit_status = util.fit_bkg(a, b, err)
+                # compute chi2
+                residuals = b - func(a, *popt)
+                chi2 = sum((residuals / err) ** 2)/len(residuals)
+                if (self.verbose > 1 ):
+                    print('    bkg fit param: ', popt)
 
             # skip this iteration because of failed fit
             if (fit_status == -1):
                 continue
-
-            if (self.verbose > 0 ):
-                print('    bkg fit param: ', popt)
-
-            r = b - func(a, *popt)
-
-            # compute chi2
-            chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
-                          noise_sigma ** 2)/(len(a)-self.poly_order)
-
-            chi2 = sum((r / err) ** 2)/len(r)
-
-            # create function from fit results
-            fit_fn = np.poly1d(fit)
 
             # plot frequency distribution alongside the background and its fit
             fig = plt.figure(1)
@@ -177,8 +166,10 @@ class Optimize_t0(configparser.ParseConfig):
             plt.ylabel('Arbitrary units')
             plt.errorbar(a, b, yerr=noise_sigma, marker='o', ms=5, markerfacecolor='black',
                          ecolor='black', markeredgecolor='black', linestyle='', label='background', zorder=4)
-            #plt.plot(freq, fit_fn(freq), label='bkgd poly O(5) fit', linewidth=3, zorder=2)
-            plt.plot(freq, func(freq, *popt), label='bkgd sinc fit', linewidth=3, zorder=3)
+            if (self.background_fit == 'pol'):
+                plt.plot(freq, fit_fn(freq), label='bkgd poly fit', linewidth=3, zorder=2)
+            if (self.background_fit == 'sinc'):
+                plt.plot(freq, func(freq, *popt), label='bkgd sinc fit', linewidth=3, zorder=3)
             plt.legend(loc="upper right", frameon=False)
 
             # show plot if enabled by config file
@@ -189,23 +180,22 @@ class Optimize_t0(configparser.ParseConfig):
             # close plot
             plt.close()
 
-            # estimate the noise from fit residuals
-            residuals = []
-            for i in range(len(a)):
-                residuals.append(np.polyval(fit, a[i])-b[i])
-
             # optimize the fit boundaries using noise_sigma and the noise threshold
             for i in range(int(len(freq)/2-1), 0, -1):
-                #if (intensity[i]-np.polyval(fit, freq[i]) < self.t0_background_threshold*noise_sigma):
-                if (abs(intensity[i]-func(freq[i], *popt)) < self.t0_background_threshold*noise_sigma):
+                if (self.background_fit == 'pol' and abs(intensity[i]-np.polyval(fit, freq[i])) < self.t0_background_threshold*noise_sigma):
+                    opt_bound1 = freq[i]
+                    break
+                elif (self.background_fit == 'sinc' and abs(intensity[i]-func(freq[i], *popt)) < self.t0_background_threshold*noise_sigma):
                     opt_bound1 = freq[i]
                     break
                 else:
                     opt_bound1 = constants.lowerCollimatorFreq
 
             for i in range(int(len(freq)/2), int(len(freq)), +1):
-                #if (intensity[i]-np.polyval(fit, freq[i]) < self.t0_background_threshold*noise_sigma):
-                if (abs(intensity[i]-func(freq[i], *popt)) < self.t0_background_threshold*noise_sigma):
+                if (self.background_fit == 'pol' and abs(intensity[i]-np.polyval(fit, freq[i])) < self.t0_background_threshold*noise_sigma):
+                    opt_bound2 = freq[i]
+                    break
+                if (self.background_fit == 'sinc' and abs(intensity[i]-func(freq[i], *popt)) < self.t0_background_threshold*noise_sigma):
                     opt_bound2 = freq[i]
                     break
                 else:
@@ -213,14 +203,13 @@ class Optimize_t0(configparser.ParseConfig):
 
             # print outs
             if (self.verbose > 0):
-                print('    t0: {0:.3f}'.format(t0*1000), 'ns\tchi2/dof: {0:.3f}'.format(chi2), '\tnoise: {0:.5f}'.format(np.std(r)),
+                print('    t0: {0:.3f}'.format(t0*1000), 'ns\tchi2/dof: {0:.3f}'.format(chi2), '\tnoise: {0:.5f}'.format(np.std(residuals)),
                       '\topt bound1: {0:.0f}'.format(opt_bound1), 'kHz \topt bound2: {0:.0f}'.format(opt_bound2), 'kHz')
 
             # append results to lists
             t0_list.append(t0)
             chi2_list.append(chi2)
-            #noise_list.append(np.std(residuals))
-            noise_list.append(np.std(r))
+            noise_list.append(np.std(residuals))
             bound1_list.append(round(opt_bound1, 8)) # important to round not to have a random last digit like 6733.000000000001
             bound2_list.append(round(opt_bound2, 8)) # important to round not to have a random last digit like 6733.000000000001
 

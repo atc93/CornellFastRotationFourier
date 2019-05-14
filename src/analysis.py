@@ -33,8 +33,6 @@ def run_tS_scan(config):
         # class method returns numpy arrays of the fast rotation signal
         opt_tS, opt_tM, bin_center, bin_content = fr.produce()
 
-        print(opt_tS, ' ', opt_tM)
-
         save_default_tM = config['tM']
 
         config['tS'] = round(opt_tS, 6)
@@ -84,8 +82,6 @@ def run_tM_scan(config):
         fr = fastrotation.FastRotation(config)
         # class method returns numpy arrays of the fast rotation signal
         opt_tS, opt_tM, bin_center, bin_content = fr.produce()
-
-        print(opt_tS, ' ', opt_tM)
 
         save_default_tM = config['tM']
         save_default_tS = config['tS']
@@ -297,8 +293,6 @@ def run_stat_fluc(config):
         if (config['fix_t0']):
             opt_t0 = config['fixed_t0_value']
 
-        print(opt_t0, ' ', chi2, ' ', noise, ' ', fit_boundary1, ' ', fit_boundary2)
-
         config['print_plot'] = True
 
         results = fourier.Fourier(
@@ -330,8 +324,6 @@ def run_default(config):
 
     if (config['fix_t0']):
         opt_t0 = config['fixed_t0_value']
-
-    print(opt_t0, ' ', chi2, ' ', noise, ' ', fit_boundary1, ' ', fit_boundary2)
 
     results = fourier.Fourier(
         config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
