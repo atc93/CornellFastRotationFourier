@@ -260,7 +260,7 @@ class Fourier(configparser.ParseConfig):
             truth_histogram.SetLineStyle(1)
             truth_histogram.SetLineWidth(0)
             truth_histogram.SetMarkerStyle(20)
-            truth_histogram.SetMarkerSize(0.8)
+            truth_histogram.SetMarkerSize(1.2)
 
             #== Draw the markers of the truth level distribution ==#
             truth_histogram.Draw("samehistP0")
