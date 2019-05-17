@@ -149,7 +149,6 @@ def print_welcome_message():
 
 def rootHistToNumpArray(hist, tS, tM):
 
-    print(tS)
     startBin = hist.FindBin(tS)
     endBin = hist.FindBin(tM)
 

@@ -80,7 +80,7 @@ class Fourier(configparser.ParseConfig):
 
             # style the Fourier transform histogram ==#
             style.setTH1Style(
-                clone_hist_list[idx], histoName[idx], 'Frequency [kHz]', 'Arbitrary units', 1.2, 1.3)
+                clone_hist_list[idx], histoName[idx], 'Frequency [kHz]', 'Arbitrary units', 1.2, 1.1)
 
             # define lines to be drawn at collimator apertures (frequency space) ==#
             inner_line, outer_line = style.setCollimatorApertureTLine(
@@ -103,6 +103,15 @@ class Fourier(configparser.ParseConfig):
             # save plot if option provided
             if (idx == 0 and self.print_plot == 1):
                 self.canvas.Print('results/' + self.tag + '/Cosine_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(
+                    self.opt_t0, self.tS, self.tM, self.freq_step_size))
+
+            clone_hist_list[idx].GetXaxis().SetRangeUser(constants.lowerCollimatorFreq, constants.upperCollimatorFreq)
+            clone_hist_list[idx].SetTitle('')
+            clone_hist_list[idx].Draw()
+            self.canvas.Draw()
+
+            if (idx == 0 and self.print_plot == 1):
+                self.canvas.Print('results/' + self.tag + '/CosineAperture_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(
                     self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
             # save plot if option provided and if sine transform was performed
@@ -133,9 +142,12 @@ class Fourier(configparser.ParseConfig):
             fit = np.polyfit(a, b, self.poly_order, w=err)
             chi2 = np.sum((np.polyval(fit, a) - b) ** 2 / self.noise_sigma ** 2)/(len(a)-self.poly_order)
         elif (self.background_fit == 'sinc'):
-            func, popt, pcov, fit_value = util.fit_bkg(a, b, err)
-            r = b - func(a, *popt)
-            chi2 = sum((r / err) ** 2)/len(r)
+            func, popt, pcov, fit_status = util.fit_bkg(a, b, err)
+            if (fit_status != -1):
+                r = b - func(a, *popt)
+                chi2 = sum((r / err) ** 2)/len(r)
+            else:
+                return(0)
 
         fig = plt.figure(1)
         ax = fig.add_subplot(111)
@@ -160,7 +172,7 @@ class Fourier(configparser.ParseConfig):
         plt.plot(a, b, marker='o', ms=5, zorder=1)
         plt.xlabel('Frequency [kHz]')
         plt.ylabel('Arbitrary units')
-        plt.plot(a, fit, label='bkgd sinc fit', linewidth=3, zorder=3, color='green')
+        plt.plot(a, fit, label='background fit', linewidth=3, zorder=3, color='green')
         plt.legend(loc="upper right", frameon=False)
 
         # show plot if enabled by config file
@@ -259,7 +271,7 @@ class Fourier(configparser.ParseConfig):
             truth_histogram.SetLineStyle(1)
             truth_histogram.SetLineWidth(0)
             truth_histogram.SetMarkerStyle(20)
-            truth_histogram.SetMarkerSize(1.2)
+            truth_histogram.SetMarkerSize(0.8+0.4*(self.freq_step_size-1))
 
             #== Draw the markers of the truth level distribution ==#
             truth_histogram.Draw("samehistP0")
@@ -324,7 +336,11 @@ class Fourier(configparser.ParseConfig):
             graph_max*0.04, graph_max*0.11)
 
         #== Compute Standard Deviation of the radial distribution (within the collimator aperture) ==#
-        std = util.computeRadialSTD(radius, intensity, eq_radius, 'ring')
+        try:
+            std = util.computeRadialSTD(radius, intensity, eq_radius, 'ring')
+        except:
+            print('\n !!ERROR!! Radial distribution width calculation failed due to negative number under the square root --> exiting program before completion\n')
+            return(0)
 
         # == Compute E-field correction
         c_e = util.computeEfieldCorrection(
@@ -470,7 +486,11 @@ class Fourier(configparser.ParseConfig):
 
         if (self.background_correction == 'fit'):
             # fit he cosine transform background
-            bkg_fit, chi2 = self.fit_background()
+            try:
+                bkg_fit, chi2 = self.fit_background()
+            except:
+                print('\n !!ERROR!! Failure to fit the background --> program exiting before completion\n')
+                return(0)
 
             # correct the cosine transform using the fit to the background
             self.correct_transform(bkg_fit)

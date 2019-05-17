@@ -25,7 +25,7 @@ class Optimize_t0(configparser.ParseConfig):
         # over large t0 window leading to non-quadratic
         # behaviors
 
-        fit = np.polyfit(x, y, 5)
+        fit = np.polyfit(x, y, 4)
 
         # create function from fit result
         fit_fn = np.poly1d(fit)
