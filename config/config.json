@@ -1,6 +1,6 @@
 {
-        "tag":"60h_nominal",
-        "root_file":"data/IntensitySpectrum_gm2pro_daq_full_run1_60h_5037A_goldList_Eth_1500_dt_6.220.root",
+        "tag":"example",
+        "root_file":"data/example.root",
 	"histo_name":"allCalosallBunches_intensitySpectrum",
         "background_correction":"fit",
         "background_fit":"sinc",
@@ -30,8 +30,8 @@
         "append_results":false,
 
         "compare_with_truth":false,
-        "truth_root_file":"data/tmc1.root",
-	"truth_histo_name":"freq",
+        "truth_root_file":"",
+	"truth_histo_name":"",
 
         "fix_t0":false,
         "fixed_t0_value":0.1216,
