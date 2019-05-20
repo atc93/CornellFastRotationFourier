@@ -42,3 +42,6 @@ class ParseConfig:
         self.remove_background = config['remove_background']
         self.background_frequencies = config['background_frequencies']
         self.background_fit = config['background_fit']
+        self.fit_lower_bound = config['fit_lower_bound']
+        self.fit_upper_bound = config['fit_upper_bound']
+        self.fix_fit_bound = config['fix_fit_bound']

@@ -201,6 +201,11 @@ class Optimize_t0(configparser.ParseConfig):
                 else:
                     opt_bound2 = constants.upperCollimatorFreq
 
+
+            if (self.fix_fit_bound):
+                opt_bound1 = self.fit_lower_bound
+                opt_bound2 = self.fit_upper_bound
+
             # print outs
             if (self.verbose > 0):
                 print('    t0: {0:.3f}'.format(t0*1000), 'ns\tchi2/dof: {0:.3f}'.format(chi2), '\tnoise: {0:.5f}'.format(np.std(residuals)),
