@@ -146,7 +146,7 @@ class Optimize_t0(configparser.ParseConfig):
                 fit_status = 1
 
             if (self.background_fit == 'sinc'):
-                func, popt, pcov, fit_status = util.fit_bkg(a, b, err)
+                func, popt, pcov, fit_status = util.fit_bkg(a, b, err, self.rebin_frs_factor)
                 # compute chi2
                 residuals = b - func(a, *popt)
                 chi2 = sum((residuals / err) ** 2)/len(residuals)

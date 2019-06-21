@@ -9,18 +9,13 @@ import src.constants as constants
 
 # compute the cosine Fourier transform
 
-def fit_bkg(a, b, err):
+def fit_bkg(a, b, err, scale_factor):
 
     def func(x,a,b,c,d):
         return a * np.sin(np.asarray(x-c)/d)/((x-c)/d) + b
-        #x = np.asarray(x-d)
-        #func = -a*x + (a*x)**3/18 - (a*x)**5/600 + (a*x)**7/35280 - (a*x)**9/3265920
-        #func = b*func+ c
-        #return func
 
     try:
-        #popt, pcov = curve_fit(func, a, b, bounds=([0,-10000,-10, 6600],[10, 0,10, 6800]), sigma=err, maxfev=1000000)
-        popt, pcov = curve_fit(func, a, b, bounds=([-10, -10, 6695, 5],[0, -0.0000, 6715, 50]), sigma=err, maxfev=1000)
+        popt, pcov = curve_fit(func, a, b, bounds=([-10*scale_factor, -10, 6695, 5],[0, 0, 6715, 50]), sigma=err, maxfev=1000)
         fit_status = 1
     except:
         print("Failure to fit the background: return -1 fit status")
@@ -34,28 +29,30 @@ def calc_cosine_transform(t0, binContent, binCenter, freq_step_size, n_freq_step
     a = []
     b = []
 
+    dt = binCenter[1]-binCenter[0]
     for i in range(0, n_freq_step):
-        frequency = (lower_freq/1000 + freq_step_size/1000/2) + \
-            i*freq_step_size/1000  # in MHz
-        a.append(frequency*1000)  # back to kHz
+        frequency = (lower_freq + freq_step_size/2) + i*freq_step_size
+        a.append(frequency)
+        frequency /= 1000 # convert from kHz to MHz because time is in micro-sec
         # time hist in micro-sec, dt is 1 ns
-        b.append(np.sum(binContent*np.cos(2*math.pi*frequency*(binCenter-t0))*0.001))
+        b.append(np.sum(binContent*np.cos(2*math.pi*frequency*(binCenter-t0))*dt))
 
     return a, b
 
 
 # compute the sine Fourier transform
-def calc_sine_transform(t0, binContent, binCenter):
+def calc_sine_transform(t0, binContent, binCenter, freq_step_size, n_freq_step, lower_freq):
 
     a = []
     b = []
 
-    for i in range(0, constants.nFreq):
-        frequency = (constants.lower_freq/1000 + constants.freq_step /
-                     1000/2) + i*constants.freq_step/1000  # in MHz
-        a.append(frequency*1000)  # back to kHz
+    dt = binCenter[1]-binCenter[0]
+    for i in range(0, n_freq_step):
+        frequency = (lower_freq + freq_step_size/2) + i*freq_step_size
+        a.append(frequency)
+        frequency /= 1000 # convert from kHz to MHz because time is in micro-sec
         # time hist in micro-sec, dt is 1 ns
-        b.append(np.sum(binContent*np.sin(2*math.pi*frequency*(binCenter-t0))*0.001))
+        b.append(np.sum(binContent*np.sin(2*math.pi*frequency*(binCenter-t0))*dt))
 
     return a, b
 

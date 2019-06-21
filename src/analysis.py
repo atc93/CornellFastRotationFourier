@@ -4,6 +4,7 @@ import src.constants as constants
 import src.fourier as fourier
 import src.util as util
 import ROOT as r
+import sys
 
 
 def run_tS_scan(config):
@@ -223,7 +224,7 @@ def run_background_threshold_scan(config):
 
         # set noise threshold
         config['t0_background_threshold'] = round(config['lower_background_threshold']+idx_noise *
-                                         config['background_threshold_step_size'], 3)
+                                                  config['background_threshold_step_size'], 3)
 
         # disable saving plots
         config['print_plot'] = False
@@ -301,7 +302,8 @@ def run_background_removal_threshold_scan(config):
     for idx_noise in range(0, n_step):
 
         # set noise threshold
-        config['background_removal_threshold'] = round(config['lower_background_removal_threshold']+idx_noise * config['background_removal_threshold_step_size'], 3)
+        config['background_removal_threshold'] = round(
+            config['lower_background_removal_threshold']+idx_noise * config['background_removal_threshold_step_size'], 3)
 
         # produce results
         results = fourier.Fourier(
@@ -380,6 +382,15 @@ def run_default(config):
 
 
 def run_fourier(config):
+
+    # return error if more than one scan is set to true
+    scans = (config['run_tS_scan'], config['run_tM_scan'], config['run_t0_scan'], config['run_freq_step_scan'],
+             config['run_background_threshold_scan'], config['run_background_removal_threshold_scan'], config['stat_fluctuation'])
+    count_scan = sum(1 for count in scans if count)
+
+    if (count_scan > 1):
+        print(' ERROR: more than one scan is configured to run. Only one scan at a time is allowed --> exiting')
+        sys.exit(0)
 
     if (config['run_tS_scan']):
         run_tS_scan(config)

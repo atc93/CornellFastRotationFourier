@@ -123,7 +123,7 @@ class FastRotation(configparser.ParseConfig):
         nine_param_fit.SetNpx(10000)
 
         wiggle_fit = nine_param_fit
-        wiggle_histogram.Fit('nine_param_fit', 'REMQ')
+        wiggle_histogram.Fit('nine_param_fit', 'REMQ', 'same')
 
         if (self.verbose > 1):
             print('\n=== 9-parameter fit ===\n')
@@ -181,7 +181,7 @@ class FastRotation(configparser.ParseConfig):
         # rebin cloned histograms
         wiggle_histogram.Rebin(self.rebin_wiggle_factor)
 
-        # plot fitted wiggle plot if option specified
+        # plot wiggle plot if option specified
         if (self.print_plot):
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, wiggle_histogram, self.tag +
@@ -189,6 +189,12 @@ class FastRotation(configparser.ParseConfig):
 
         # fit wiggle plot
         wiggle_fit = self.fit_wiggle(wiggle_histogram)
+
+        # plot fitted wiggle plot if option specified
+        if (self.print_plot):
+            for time in self.times_to_plot:
+                plotting.plot(self.canvas, wiggle_histogram, self.tag +
+                              '/FittedWiggle', self.tS, self.start_fit_time + time, self.tM, wiggle_fit)
 
         # create histogram of the fit residuals
         residuals = wiggle_histogram

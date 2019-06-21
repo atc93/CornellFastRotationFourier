@@ -36,11 +36,22 @@ class Fourier(configparser.ParseConfig):
     def print_info(self):
 
         print('\n ### Step 4/4: produce results\n')
-        print('    t0 = ', self.opt_t0)
-        print('    tS = ', self.tS)
-        print('    tM = ', self.tM)
-        print('    df = ', self.freq_step_size)
+
+        print('    -- input parameters --')
+        print('    t0 = ', round(self.opt_t0,6), ' us')
+        print('    tS = ', self.tS, 'us')
+        print('    tM = ', self.tM, ' us')
+        print('    df = ', self.freq_step_size, ' kHz')
         print('    n  = ', self.field_index)
+
+    def print_results(self, xe, width, ce, mean_freq, std_freq):
+
+        print('\n    -- results --')
+        print('    mean freq   =', round(mean_freq,2), ' kHz')
+        print('    width freq  =', round(std_freq,2), ' kHz')
+        print('    xe        =', round(xe,2), ' mm')
+        print('    width     =', round(width,2), ' mm')
+        print('    ce        =', round(ce,), ' ppb')
 
     def produce_cosine_transform(self):
 
@@ -56,7 +67,7 @@ class Fourier(configparser.ParseConfig):
         # compute sine Fourier transform
         if (self.calc_sine):
             freq, intensity = util.calc_sine_transform(
-                self.opt_t0, self.bin_content, self.bin_center)
+                self.opt_t0, self.bin_content, self.bin_center, self.freq_step_size, self.n_freq_step, self.lower_freq)
 
             for x, y in zip(freq, intensity):
                 iBin = self.sine_histogram.FindBin(x)
@@ -142,7 +153,7 @@ class Fourier(configparser.ParseConfig):
             fit = np.polyfit(a, b, self.poly_order, w=err)
             chi2 = np.sum((np.polyval(fit, a) - b) ** 2 / self.noise_sigma ** 2)/(len(a)-self.poly_order)
         elif (self.background_fit == 'sinc'):
-            func, popt, pcov, fit_status = util.fit_bkg(a, b, err)
+            func, popt, pcov, fit_status = util.fit_bkg(a, b, err, self.rebin_frs_factor)
             if (fit_status != -1):
                 r = b - func(a, *popt)
                 chi2 = sum((r / err) ** 2)/len(r)
@@ -177,8 +188,8 @@ class Fourier(configparser.ParseConfig):
 
         # show plot if enabled by config file
         if (self.print_plot):
-            plt.savefig('results/' + self.tag + '/Background_fit_t0_{0:.6f}_tS_{1}_tM_{2}_{3}_{4}.eps'.format(
-                        self.opt_t0, self.tS, self.tM, self.fit_boundary1, self.fit_boundary2), format='eps')
+            plt.savefig('results/' + self.tag + '/Background_fit_t0_{0:.6f}_tS_{1}_tM_{2}_df_{3}_{4}_{5}.eps'.format(
+                        self.opt_t0, self.tS, self.tM, self.freq_step_size, self.fit_boundary1, self.fit_boundary2), format='eps')
 
         return fit, chi2
 
@@ -218,7 +229,7 @@ class Fourier(configparser.ParseConfig):
 
         #== Style the approximated frequency distribution histogram ==#
         style.setTH1Style(self.cosine_histogram, '',
-                          'Frequency [kHz]', 'Arbitrary units', 1, 1.3)
+                          'Frequency [kHz]', 'Arbitrary units', 1, 1.1)
         self.cosine_histogram.SetMinimum(-0.5)
 
         #== Define lines to be drawn at collimator apertures (frequency space) ==#
@@ -291,10 +302,21 @@ class Fourier(configparser.ParseConfig):
             self.canvas.Draw()
 
         if (self.print_plot == 1):
-            self.canvas.Print('results/' + self.tag + '/CorrectedCosine_t0_{0:.5f}_tS_{1}_tM_{2}df_{3}.eps'.format(
+            self.canvas.Print('results/' + self.tag + '/CorrectedCosine_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(
                 self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
-    def produce_radial(self, chi2):
+        self.cosine_histogram.GetXaxis().SetRangeUser(constants.lowerCollimatorFreq, constants.upperCollimatorFreq)
+        self.cosine_histogram.SetTitle('')
+        self.cosine_histogram.Draw()
+        self.canvas.Draw()
+
+        if (self.print_plot == 1):
+            self.canvas.Print('results/' + self.tag + '/CorrectedCosineAperture_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(
+                self.opt_t0, self.tS, self.tM, self.freq_step_size))
+
+        return (self.cosine_histogram.GetMean(), self.cosine_histogram.GetRMS())
+
+    def produce_radial(self, chi2, mean_freq, std_freq):
 
         #== Define arrays containing radius and intensity information ==#
         #== The array will be used to produce a TGraph (required since non equidistance radial points) ==#
@@ -359,9 +381,9 @@ class Fourier(configparser.ParseConfig):
 
         if (self.print_plot == 1):
             self.canvas.Print(
-                'results/' + self.tag + '/Radial_t0_{0:.5f}_tS_{1}_tM_{2}.eps'.format(self.opt_t0, self.tS, self.tM))
+                'results/' + self.tag + '/Radial_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(self.opt_t0, self.tS, self.tM, self.freq_step_size))
             self.canvas.Print(
-                'results/' + self.tag + '/Radial_t0_{0:.5f}_tS_{1}_tM_{2}.C'.format(self.opt_t0, self.tS, self.tM))
+                'results/' + self.tag + '/Radial_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.C'.format(self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
         #== Limit radial distribution to collimator aperture ==#
         graph.GetXaxis().SetRangeUser(
@@ -452,9 +474,12 @@ class Fourier(configparser.ParseConfig):
             pt5.Draw("same")
             #graph.Draw("sameP")
 
+            self.out_file2.cd()
+            truth_graph.Write('truth_rad')
+
         if (self.print_plot == 1):
             self.canvas.Print(
-                'results/' + self.tag + '/RadialBeamCoordinate_t0_{0:.5f}_tS_{1}_tM_{2}.eps'.format(self.opt_t0, self.tS, self.tM))
+                'results/' + self.tag + '/RadialBeamCoordinate_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
         self.out_file.cd()
         graph.Write('rad')
@@ -463,6 +488,8 @@ class Fourier(configparser.ParseConfig):
 
         # convert equilibrium radius from ring to beam coordinate
         eq_radius -= constants.magicR
+
+        self.print_results(eq_radius, std, c_e, mean_freq, std_freq)
 
         # save results to a text file
         if (self.append_results):
@@ -493,7 +520,7 @@ class Fourier(configparser.ParseConfig):
                 return(0)
 
             # correct the cosine transform using the fit to the background
-            self.correct_transform(bkg_fit)
+            mean_freq, std_freq = self.correct_transform(bkg_fit)
 
         if (self.background_correction == 'integral'):
             truth_file = r.TFile(self.truth_root_file)
@@ -518,4 +545,4 @@ class Fourier(configparser.ParseConfig):
             chi2 = -1
 
         # convert from frequency to radial distribution
-        self.produce_radial(chi2)
+        self.produce_radial(chi2, mean_freq, std_freq)
