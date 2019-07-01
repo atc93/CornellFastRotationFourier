@@ -71,7 +71,7 @@ class Optimize_t0(configparser.ParseConfig):
         plt.ylabel('$\mathregular{{\chi}^2}}$/d.o.f.')
 
         # save plot if specified to do so in config file
-        if (self.print_plot):
+        if (self.print_plot == 1):
             plt.savefig('results/' + self.tag + '/t0_optimization/t0Opt_' + label +
                         '_fit_tS_{0}_tM_{1}.eps'.format(self.tS, self.tM))
 
@@ -173,7 +173,7 @@ class Optimize_t0(configparser.ParseConfig):
             plt.legend(loc="upper right", frameon=False)
 
             # show plot if enabled by config file
-            if (self.print_plot):
+            if (self.print_plot == 2):
                 plt.savefig('results/' + self.tag + '/t0_optimization/Cosine_t0_{0:.6f}_tS_{1}_tM_{2}_{3}_{4}.eps'.format(
                     t0, self.tS, self.tM, fit_bound1, fit_bound2), format='eps')
 

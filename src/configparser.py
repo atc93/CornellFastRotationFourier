@@ -45,3 +45,5 @@ class ParseConfig:
         self.fit_lower_bound = config['fit_lower_bound']
         self.fit_upper_bound = config['fit_upper_bound']
         self.fix_fit_bound = config['fix_fit_bound']
+        self.check_positron_hits = config['check_positron_hits']
+        self.positron_hits_threshold = config['positron_hits_threshold']

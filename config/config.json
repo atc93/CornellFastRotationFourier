@@ -24,6 +24,9 @@
         "start_fit_time":30,
 	"poly_order":2,
 
+        "check_positron_hits":true,
+        "positron_hits_threshold":100000,
+
 	"print_plot":true,
 	"calc_sine":false,
         "verbose":1,

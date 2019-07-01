@@ -26,8 +26,9 @@ class Fourier(configparser.ParseConfig):
             'cosine', 'cosine', self.n_freq_step, self.lower_freq, self.upper_freq)
         self.sine_histogram = r.TH1D(
             'sine', 'sine', self.n_freq_step, self.lower_freq, self.upper_freq)
-        self.out_file = r.TFile('results/' + self.tag + '/results_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.root'.format(
-                    self.opt_t0, self.tS, self.tM, self.freq_step_size), 'RECREATE')
+        if (self.print_plot == 2):
+            self.out_file = r.TFile('results/' + self.tag + '/results_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.root'.format(
+                        self.opt_t0, self.tS, self.tM, self.freq_step_size), 'RECREATE')
         self.out_file2 = r.TFile('results/' + self.tag + '/results.root', 'RECREATE')
 
 
@@ -106,13 +107,14 @@ class Fourier(configparser.ParseConfig):
                             inner_line, outer_line, pt, pt2]
             plotting.plotMultipleObjects('', list_to_draw)
             self.canvas.Draw()
-            self.out_file.cd()
-            clone_hist_list[idx].Write()
+            if (self.print_plot == 2):
+                self.out_file.cd()
+                clone_hist_list[idx].Write()
             self.out_file2.cd()
             clone_hist_list[idx].Write()
 
             # save plot if option provided
-            if (idx == 0 and self.print_plot == 1):
+            if (idx == 0 and self.print_plot == 2):
                 self.canvas.Print('results/' + self.tag + '/Cosine_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(
                     self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
@@ -126,7 +128,7 @@ class Fourier(configparser.ParseConfig):
                     self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
             # save plot if option provided and if sine transform was performed
-            if (idx == 1 and self.print_plot == 1 and self.calc_sine == 1):
+            if (idx == 1 and self.print_plot == 2 and self.calc_sine == 1):
                 self.canvas.Print('results/' + self.tag + '/Sine_t0_{0:.3f}_tS_{1}_tM_{2}_df_{3}.eps'.format(
                     self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
@@ -187,7 +189,7 @@ class Fourier(configparser.ParseConfig):
         plt.legend(loc="upper right", frameon=False)
 
         # show plot if enabled by config file
-        if (self.print_plot):
+        if (self.print_plot == 1):
             plt.savefig('results/' + self.tag + '/Background_fit_t0_{0:.6f}_tS_{1}_tM_{2}_df_{3}_{4}_{5}.eps'.format(
                         self.opt_t0, self.tS, self.tM, self.freq_step_size, self.fit_boundary1, self.fit_boundary2), format='eps')
 
@@ -245,8 +247,9 @@ class Fourier(configparser.ParseConfig):
         list_to_draw = [self.cosine_histogram, inner_line, outer_line, pt, pt2]
         plotting.plotMultipleObjects('', list_to_draw)
         self.canvas.Draw()
-        self.out_file.cd()
-        self.cosine_histogram.Write('corrected_cosine')
+        if (self.print_plot == 2):
+            self.out_file.cd()
+            self.cosine_histogram.Write('corrected_cosine')
         self.out_file2.cd()
         self.cosine_histogram.Write('corrected_cosine')
 
@@ -301,7 +304,7 @@ class Fourier(configparser.ParseConfig):
             #== Draw TCanvas ==#
             self.canvas.Draw()
 
-        if (self.print_plot == 1):
+        if (self.print_plot == 2):
             self.canvas.Print('results/' + self.tag + '/CorrectedCosine_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(
                 self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
@@ -379,7 +382,7 @@ class Fourier(configparser.ParseConfig):
 
         self.canvas.Draw()
 
-        if (self.print_plot == 1):
+        if (self.print_plot == 2):
             self.canvas.Print(
                 'results/' + self.tag + '/Radial_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(self.opt_t0, self.tS, self.tM, self.freq_step_size))
             self.canvas.Print(
@@ -398,7 +401,7 @@ class Fourier(configparser.ParseConfig):
                         magic_radius_pave_text, results_pave_text]
         plotting.plotMultipleObjects('APL', list_to_draw)
 
-        if (self.print_plot == 1):
+        if (self.print_plot == 2):
             self.canvas.Print(
                 'results/' + self.tag + '/RadialInAperture_t0_{0:.5f}_tS_{1}_tM_{2}.eps'.format(self.opt_t0, self.tS, self.tM))
             self.canvas.Print(
@@ -481,8 +484,9 @@ class Fourier(configparser.ParseConfig):
             self.canvas.Print(
                 'results/' + self.tag + '/RadialBeamCoordinate_t0_{0:.5f}_tS_{1}_tM_{2}_df_{3}.eps'.format(self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
-        self.out_file.cd()
-        graph.Write('rad')
+        if (self.print_plot == 2):
+            self.out_file.cd()
+            graph.Write('rad')
         self.out_file2.cd()
         graph.Write('rad')
 

@@ -9,6 +9,7 @@ import numpy as np
 import ROOT as r
 import array
 import json
+import sys
 
 
 class FastRotation(configparser.ParseConfig):
@@ -165,7 +166,7 @@ class FastRotation(configparser.ParseConfig):
             self.histogram.Rebin(self.rebin_frs_factor)
 
         # plot input histogram if option specified
-        if (self.print_plot):
+        if (self.print_plot == 2):
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, self.histogram, self.tag +
                               '/Intensity', self.tS, self.tS + time, self.tM)
@@ -178,6 +179,15 @@ class FastRotation(configparser.ParseConfig):
 
             return opt_tS, opt_tM, bin_center, bin_content
 
+        # check number of hits in positron spectrum
+        if (self.check_positron_hits):
+            n_positron_hits = self.histogram.Integral(self.histogram.FindBin(self.tS), self.histogram.FindBin(self.tM))
+            if (self.verbose > 1):
+                print(' Number of positron analyzed: ', n_positron_hits)
+            if (n_positron_hits < self.positron_hits_threshold):
+                print(' Warning -- low positron statistics: program exiting')
+                sys.exit(1)
+
         # clone input histogram to produce wiggle plot
         wiggle_histogram = self.histogram.Clone()
 
@@ -185,7 +195,7 @@ class FastRotation(configparser.ParseConfig):
         wiggle_histogram.Rebin(self.rebin_wiggle_factor)
 
         # plot wiggle plot if option specified
-        if (self.print_plot):
+        if (self.print_plot == 2):
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, wiggle_histogram, self.tag +
                               '/Wiggle', self.tS, self.start_fit_time + time, self.tM)
@@ -194,7 +204,7 @@ class FastRotation(configparser.ParseConfig):
         wiggle_fit = self.fit_wiggle(wiggle_histogram)
 
         # plot fitted wiggle plot if option specified
-        if (self.print_plot):
+        if (self.print_plot == 2):
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, wiggle_histogram, self.tag +
                               '/FittedWiggle', self.tS, self.start_fit_time + time, self.tM, wiggle_fit)
@@ -208,7 +218,7 @@ class FastRotation(configparser.ParseConfig):
                     wiggle_histogram.GetBinCenter(i+1)))/wiggle_histogram.GetBinContent(i+1)*100)
 
         # plot histogram of residuals
-        if (self.print_plot):
+        if (self.print_plot == 2):
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, residuals, self.tag + '/Residuals',
                               self.tS, self.start_fit_time + time, self.tM)
@@ -224,7 +234,7 @@ class FastRotation(configparser.ParseConfig):
         opt_tS, opt_tM = self.optimize_tS_tM()
 
         # plot frs plot if option specified
-        if (self.print_plot):
+        if (self.print_plot == 1):
             plotting.plot(self.canvas, self.histogram, self.tag + '/FRS', 0, 10, self.tM)
             for time in self.times_to_plot:
                 plotting.plot(self.canvas, self.histogram, self.tag +
