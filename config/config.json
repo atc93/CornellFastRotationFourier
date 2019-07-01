@@ -27,7 +27,7 @@
         "check_positron_hits":true,
         "positron_hits_threshold":100000,
 
-	"print_plot":true,
+	"print_plot":2,
 	"calc_sine":false,
         "verbose":1,
         "append_results":false,
