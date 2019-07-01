@@ -43,6 +43,9 @@ class FastRotation(configparser.ParseConfig):
             if (abs(self.histogram.GetBinContent(bin_idx)-1) < delta):
                 delta = abs(self.histogram.GetBinContent(bin_idx)-1)
                 opt_tM = self.histogram.GetBinCenter(bin_idx)
+        if (opt_tM == -1):
+            opt_tM = self.tM
+            print(' Warning -- could not optimize tM')
 
         return opt_tS, opt_tM
 
