@@ -13,7 +13,7 @@
 	"t0_step_size":0.000025,
 	"tS":4,
 	"tM":300,
-        "n_t0_opt":5,
+        "n_t0_opt":4,
         "n_fit_param":9,
         "freq_step_size":2,
         "lower_freq":6630,
@@ -27,6 +27,10 @@
         "check_positron_hits":true,
         "positron_hits_threshold":100000,
 
+        "fix_fit_bound": false,
+        "fit_lower_bound": 6671,
+        "fit_upper_bound": 6725,
+
 	"print_plot":2,
 	"calc_sine":false,
         "verbose":1,
@@ -34,7 +38,8 @@
 
         "compare_with_truth":false,
         "truth_root_file":"",
-	"truth_histo_name":"",
+	"truth_freq_histo_name":"",
+	"truth_rad_histo_name":"",
 
         "fix_t0":false,
         "fixed_t0_value":0.1216,
