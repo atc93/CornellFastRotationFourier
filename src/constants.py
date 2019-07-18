@@ -6,13 +6,13 @@ import math
 
 #== Physics constants ==#
 muonMass = .105658  # in GeV
-magicR = 7112  # in mm
+magic_r = 7112  # in mm
 magicP = 3.094  # in GeV
 magicE = math.sqrt(math.pow(muonMass, 2) + math.pow(magicP, 2))  # in GeV
 magicGamma = magicE / muonMass  # dimensionless
 magicBeta = magicP / (magicGamma * muonMass)  # dimensionless
 speedOfLight = 299792458  # in m/s
-magicFreq = magicBeta*speedOfLight / (2 * math.pi * (magicR))  # MHz
+magicFreq = magicBeta*speedOfLight / (2 * math.pi * (magic_r))  # kHz
 
 #== For plotting purposes ==#
 

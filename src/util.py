@@ -1,4 +1,5 @@
 from scipy.optimize import curve_fit
+import scipy.special as special
 import os
 import sys
 import math
@@ -7,22 +8,86 @@ import ROOT as r
 import numpy as np
 import src.constants as constants
 
-# compute the cosine Fourier transform
 
-def fit_bkg(a, b, err, scale_factor):
+def fit_sinc(a, b, err, scale_factor, verbose):
 
-    def func(x,a,b,c,d):
+    def func(x, a, b, c, d):
         return a * np.sin(np.asarray(x-c)/d)/((x-c)/d) + b
 
     try:
-        popt, pcov = curve_fit(func, a, b, bounds=([-10*scale_factor, -10, 6695, 5],[0, 0, 6715, 50]), sigma=err, maxfev=1000)
-        fit_status = 1
+        popt, pcov = curve_fit(func, a, b, bounds=(
+            [-10*scale_factor, -10, 6695, 5], [0, 0, 6715, 50]), sigma=err, maxfev=1000)
     except:
-        print("Failure to fit the background: return -1 fit status")
+        print("Sinc background fit failed: return chi2 of -1")
         fit_status = -1
-        return func, fit_status, fit_status, fit_status
+        return -1, -1, -1, -1, -1
 
-    return func, popt, pcov, fit_status
+    if (verbose > 1):
+        print('    bkg fit param: ', popt)
+
+    residuals = b - func(a, *popt)
+    chi2 = sum((residuals / err) ** 2)/len(residuals)
+
+    return func, chi2, np.std(residuals), popt, pcov
+
+def fit_triangle(a, b, err, ts, verbose):
+
+    def func(f,amp, time, a, b, c):
+        return -amp*(((f-a)/(b-a))*(special.sici(time*2*math.pi*(f-a))[0]-special.sici(time*2*math.pi*(f-b))[0])+(np.cos(time*2*math.pi*(f-a))-np.cos(time*2*math.pi*(f-b)))/(time*2*math.pi*(b-a))+
+                 ((c-f)/(b-c))*(special.sici(time*2*math.pi*(f-c))[0]-special.sici(time*2*math.pi*(f-b))[0])-(np.cos(time*2*math.pi*(f-c))-np.cos(time*2*math.pi*(f-b)))/(time*2*math.pi*(b-c)))
+
+    initial_guess = [10.0, ts/1000, constants.magicFreq-10, constants.magicFreq+10, constants.magicFreq] # tS converted to ms because frequency in kHz
+    try:
+        popt, pcov = curve_fit(func, a, b, p0=initial_guess, maxfev=100000)
+    except:
+        print("    Triangle background fit failed: return chi2 of -1")
+        fit_status = -1
+        return -1, -1, -1, -1, -1        
+
+    if (verbose > 1):
+        print('    bkg fit param: ', popt)
+
+    residuals = b - func(a, *popt)
+    chi2 = sum((residuals / err) ** 2)/len(residuals)
+
+    return func, chi2, np.std(residuals), popt, pcov
+
+def fit_erfi(a, b, err, ts, verbose):
+
+    def func(f, amp, f_mean, f_sigma, time):
+        # the 2.pi goes with 'time' because we are in the frequency domain and not in the angular frequency domain
+        # time is 'ts-t0'
+        return -amp*np.exp(-np.asarray(f-f_mean)**2/(2*abs(f_sigma)**2))*np.imag(special.erfi((np.asarray(f-f_mean)+1j*(abs(f_sigma)**2)*time*2*math.pi)/np.sqrt(2*abs(f_sigma)**2)))
+
+    initial_guess = [10.0, 6705, 10, ts/1000] # tS converted to ms because frequency in kHz
+    popt, pcov = curve_fit(func, a, b, p0=initial_guess, maxfev=10000)
+
+    if (verbose > 1):
+        print('    bkg fit param: ', popt)
+
+    residuals = b - func(a, *popt)
+    chi2 = sum((residuals / err) ** 2)/len(residuals)
+
+    return func, chi2, np.std(residuals), popt, pcov
+
+
+def fit_pol(a, b, err, poly_order, noise_sigma):
+
+    try:
+        fit = np.polyfit(a, b, poly_order, w=err)
+    except:
+        print("Poly background fit failed: return chi2 of -1")
+        return -1, -1, -1
+
+    func = np.poly1d(fit)
+    chi2 = np.sum((np.polyval(fit, a) - b) ** 2 /
+                  noise_sigma ** 2)/(len(a)-poly_order)
+    residuals = []
+    for i in range(len(a)):
+        residuals.append(np.polyval(fit, a[i])-b[i])
+
+    return func, chi2, np.std(residuals)
+
 
 def calc_cosine_transform(t0, binContent, binCenter, freq_step_size, n_freq_step, lower_freq):
 
@@ -33,7 +98,7 @@ def calc_cosine_transform(t0, binContent, binCenter, freq_step_size, n_freq_step
     for i in range(0, n_freq_step):
         frequency = (lower_freq + freq_step_size/2) + i*freq_step_size
         a.append(frequency)
-        frequency /= 1000 # convert from kHz to MHz because time is in micro-sec
+        frequency /= 1000  # convert from kHz to MHz because time is in micro-sec
         # time hist in micro-sec, dt is 1 ns
         b.append(np.sum(binContent*np.cos(2*math.pi*frequency*(binCenter-t0))*dt))
 
@@ -50,7 +115,7 @@ def calc_sine_transform(t0, binContent, binCenter, freq_step_size, n_freq_step, 
     for i in range(0, n_freq_step):
         frequency = (lower_freq + freq_step_size/2) + i*freq_step_size
         a.append(frequency)
-        frequency /= 1000 # convert from kHz to MHz because time is in micro-sec
+        frequency /= 1000  # convert from kHz to MHz because time is in micro-sec
         # time hist in micro-sec, dt is 1 ns
         b.append(np.sum(binContent*np.sin(2*math.pi*frequency*(binCenter-t0))*dt))
 
@@ -89,9 +154,9 @@ def minimization(parabola, cosine, n_freq_step, fit_boundary1, fit_boundary2):
     y = []
 
     for bin_idx in range(1, n_freq_step+1):
-        if ( (cosine.GetBinCenter(bin_idx) <fit_boundary1 and cosine.GetBinCenter(bin_idx) > constants.lowerCollimatorFreq) or
+        if ((cosine.GetBinCenter(bin_idx) < fit_boundary1 and cosine.GetBinCenter(bin_idx) > constants.lowerCollimatorFreq) or
                 (cosine.GetBinCenter(bin_idx) > fit_boundary2 and cosine.GetBinCenter(bin_idx) < constants.upperCollimatorFreq)):
-        #if (cosine.GetBinCenter(bin_idx) < constants.lowerCollimatorFreq or cosine.GetBinCenter(bin_idx) > constants.upperCollimatorFreq):
+            # if (cosine.GetBinCenter(bin_idx) < constants.lowerCollimatorFreq or cosine.GetBinCenter(bin_idx) > constants.upperCollimatorFreq):
             x.append(parabola.GetBinContent(bin_idx))
             y.append(cosine.GetBinContent(bin_idx))
             x.append(parabola.GetBinContent(bin_idx))
@@ -161,7 +226,7 @@ def rootHistToNumpArray(hist, tS, tM):
 #== Convert from ring global radial coordinate to beam local radial coordinate ==#
 
 
-def globalToLocalRadialCoordinate(graph):
+def global_to_local_radial_coordinate(graph):
 
     nPoint = graph.GetN()
 
@@ -169,12 +234,12 @@ def globalToLocalRadialCoordinate(graph):
 
         x, y = r.Double(), r.Double()
         graph.GetPoint(i, x, y)
-        graph.SetPoint(i, x-constants.magicR, y)
+        graph.SetPoint(i, x-constants.magic_r, y)
 
 #== Compute Radial Mean within collimator aperture ==#
 
 
-def computeRadialMean(radius, intensity):
+def compute_radial_mean(radius, intensity):
 
     mean = 0
     sumI = 0
@@ -196,7 +261,7 @@ def computeRadialMean(radius, intensity):
 #== Compute Radial Standard Deviation within collimator aperture ==#
 
 
-def computeRadialSTD(radius, intensity, meanRad, label):
+def compute_radial_std(radius, intensity, meanRad, label):
 
     std = 0
     sumI = 0
@@ -204,10 +269,10 @@ def computeRadialSTD(radius, intensity, meanRad, label):
     for x, y in zip(radius, intensity):
 
         #== Discard data point if radius outside of collimator aperture ==#
-        if ( label == 'ring'):
+        if (label == 'ring'):
             if (x < constants.lowerCollimatorRad or x > constants.upperCollimatorRad):
                 continue
-        if ( label == 'beam'):
+        if (label == 'beam'):
             if (x < -45 or x > 45):
                 continue
 
@@ -223,9 +288,9 @@ def computeRadialSTD(radius, intensity, meanRad, label):
 #== Compute the E-field correction ==#
 
 
-def computeEfieldCorrection(n, mean, std):
+def compute_efield_correction(n, mean, std):
 
-    return (- 2 * math.pow(constants.magicBeta, 2) * n * (1-n) * (math.pow(mean, 2) + math.pow(std, 2)) / (math.pow(constants.magicR, 2)) * 1e9)
+    return (- 2 * math.pow(constants.magicBeta, 2) * n * (1-n) * (math.pow(mean, 2) + math.pow(std, 2)) / (math.pow(constants.magic_r, 2)) * 1e9)
 
 #== Extract the two minima of the Cosine Fourier transform ==#
 
@@ -239,6 +304,7 @@ def extractMinima(hist):
     minBinIdx2 = hist.GetMinimumBin()
     hist.GetXaxis().SetRangeUser(constants.lower_freq, constants.upper_freq)
     return min1, min2, abs(min1-min2), minBinIdx1, minBinIdx2
+
 
 '''
 import numba as nb
@@ -283,4 +349,4 @@ def compute_numba(t0, a, b, it):
         #np.sum( a[j] * np.cos( 2. * np.pi * frequency * (b[j]-t0) )*0.001 )
 
     return integral
-'''    
+'''

@@ -29,7 +29,7 @@ def run_tS_scan(config):
         # instantiate fast rotation class
         fr = fastrotation.FastRotation(config)
         # class method returns numpy arrays of the fast rotation signal
-        opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+        opt_tS, opt_tM, n_positron_hits, bin_center, bin_content = fr.produce()
 
         save_default_tM = config['tM']
 
@@ -49,7 +49,7 @@ def run_tS_scan(config):
 
         # produce results
         results = fourier.Fourier(
-            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2, n_positron_hits)
         results.run()
 
         del fr, t0, results
@@ -124,7 +124,7 @@ def run_t0_scan(config):
     # instantiate fast rotation class
     fr = fastrotation.FastRotation(config)
     # class method returns numpy arrays of the fast rotation signal
-    opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+    opt_tS, opt_tM, n_positron_hits, bin_center, bin_content = fr.produce()
 
     config['tS'] = round(opt_tS, 6)
     config['tM'] = round(opt_tM, 6)
@@ -147,7 +147,7 @@ def run_t0_scan(config):
 
         # produce results
         results = fourier.Fourier(config, bin_center, bin_content, round(
-            config['lower_t0']+idx_t0 * config['t0_step_size'], 6), noise, fit_boundary1, fit_boundary2)
+            config['lower_t0']+idx_t0 * config['t0_step_size'], 6), noise, fit_boundary1, fit_boundary2, n_positron_hits)
         results.run()
 
         del results
@@ -180,7 +180,7 @@ def run_freq_step_scan(config):
         # instantiate fast rotation class
         fr = fastrotation.FastRotation(config)
         # class method returns numpy arrays of the fast rotation signal
-        opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+        opt_tS, opt_tM, n_positron_hits, bin_center, bin_content = fr.produce()
 
         save_default_tM = config['tM']
         save_default_tS = config['tS']
@@ -201,7 +201,7 @@ def run_freq_step_scan(config):
 
         # produce results
         results = fourier.Fourier(
-            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2, n_positron_hits)
         results.run()
 
         del fr, t0, results
@@ -232,7 +232,7 @@ def run_background_threshold_scan(config):
         # instantiate fast rotation class
         fr = fastrotation.FastRotation(config)
         # class method returns numpy arrays of the fast rotation signal
-        opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+        opt_tS, opt_tM, n_positron_hits, bin_center, bin_content = fr.produce()
 
         save_default_tM = config['tM']
         save_default_tS = config['tS']
@@ -253,7 +253,7 @@ def run_background_threshold_scan(config):
 
         # produce results
         results = fourier.Fourier(
-            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2, n_positron_hits)
         results.run()
 
         del fr, t0, results
@@ -279,7 +279,7 @@ def run_background_removal_threshold_scan(config):
     # instantiate fast rotation class
     fr = fastrotation.FastRotation(config)
     # class method returns numpy arrays of the fast rotation signal
-    opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+    opt_tS, opt_tM, n_positron_hits, bin_center, bin_content = fr.produce()
 
     save_default_tM = config['tM']
     save_default_tS = config['tS']
@@ -307,7 +307,7 @@ def run_background_removal_threshold_scan(config):
 
         # produce results
         results = fourier.Fourier(
-            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2, n_positron_hits)
         results.run()
 
         del results
@@ -363,7 +363,7 @@ def run_default(config):
     # instantiate fast rotation class
     fr = fastrotation.FastRotation(config)
     # class method returns numpy arrays of the fast rotation signal
-    opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+    opt_tS, opt_tM, n_positron_hits, bin_center, bin_content = fr.produce()
 
     config['tS'] = round(opt_tS, 6)
     config['tM'] = round(opt_tM, 6)
@@ -377,7 +377,7 @@ def run_default(config):
         opt_t0 = config['fixed_t0_value']
 
     results = fourier.Fourier(
-        config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+        config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2, n_positron_hits)
     results.run()
 
 

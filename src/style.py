@@ -73,7 +73,7 @@ def setTGraphStyle(graph, title, xAxisTitle, yAxisTitle, graphMin, graphMax):
 
 
 #== Create and set vertical TLines style showing the collimator frequency aperture ==#
-def setCollimatorApertureTLine(yMin, yMax, label):
+def set_collimator_aperture_tline(yMin, yMax, label):
 
     if (label == 'frequency'):
         innerLine = r.TLine(constants.lowerCollimatorFreq,
@@ -131,7 +131,7 @@ def setCollimatorAperturePaveText(yMin, yMax, label):
 
 def setMagicRadiusTLine(yMin, yMax):
 
-    magicLine = r.TLine(constants.magicR, yMin, constants.magicR, yMax)
+    magicLine = r.TLine(constants.magic_r, yMin, constants.magic_r, yMax)
     magicLine.SetLineWidth(1)
     magicLine.SetLineStyle(7)
 
@@ -154,26 +154,35 @@ def setMagicRadiusPaveText(yMin, yMax):
 
     return pt
 
-#== Create and set TPaveText style containing results: x_e, width, CE ==#
+#== Create and set TPaveText style containing results: x_e, width, c_e ==#
 
 
-def setRadialResultsPaveText(eqRadius, std, CE, yMin, yMax, radMin, radMax, coord):
+def set_radial_results_pave_text(eq_radius, std, c_e, yMin, yMax, radMin, radMax, coord):
 
     pt = r.TPaveText(radMin, yMax, radMax, yMin)
 
     if (coord == 'beam'):
-        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eqRadius) + ' mm')
+        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eq_radius) + ' mm')
         pt.AddText('#sigma = ' + '{0:.2f}'.format(std) + ' mm')
-        pt.AddText('  C_{E} = ' + '{0:.0f}'.format(CE) + ' ppb ');
+        pt.AddText('  C_{E} = ' + '{0:.0f}'.format(c_e) + ' ppb  ');
     elif (coord == 'ring'):
-        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eqRadius) + ' mm')
+        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eq_radius) + ' mm')
         pt.AddText('#sigma = ' + '{0:.2f}'.format(std) + ' mm   ')
+
     pt.SetShadowColor(0)
     pt.SetBorderSize(1)
     pt.SetFillColor(0)
     pt.SetLineWidth(1)
     pt.SetLineColor(1)
     pt.SetTextAngle(90)
+
+    if (coord == 'truth'):
+        pt.AddText('Truth level');
+        pt.AddText('x_{e} = ' + '{0:.2f}'.format(eq_radius) + ' mm');
+        pt.AddText(' #sigma = ' + '{0:.2f}'.format(std) + ' mm ');
+        pt.AddText('      C_{E} = ' + '{0:.0f}'.format(c_e) + ' ppb     ');
+        pt.SetLineColor(2);
+        pt.SetTextColor(2);
 
     return pt
 
