@@ -191,7 +191,7 @@ def set_radial_results_pave_text(eq_radius, std, c_e, yMin, yMax, radMin, radMax
 
 def setRecTruthFrequenciesPaveText(recFreq, trueFreq, rec_width, true_width, yMin, yMax):
 
-    pt = r.TPaveText(6664, yMax, 6686, yMin)
+    pt = r.TPaveText(6664, yMin, 6686, yMax)
     pt.AddText('<reco freq> = ' + '{0:.2f}'.format(recFreq) + ' kHz')
     pt.AddText('  <true freq> = ' + '{0:.2f}'.format(trueFreq) + ' kHz ')
     pt.GetListOfLines().Last().SetTextColor(2)
@@ -209,10 +209,9 @@ def setRecTruthFrequenciesPaveText(recFreq, trueFreq, rec_width, true_width, yMi
 
 def setRecFrequenciesPaveText(freq, width, yMin, yMax):
 
-    pt = r.TPaveText(6664, yMax, 6686, yMin)
-    pt.AddText('<rfreq> = ' + '{0:.2f}'.format(freq) + ' kHz')
-    pt.AddText('  width = ' + '{0:.2f}'.format(width) + ' kHz    ')
-    pt.GetListOfLines().Last().SetTextColor(2)
+    pt = r.TPaveText(6664, yMin, 6686, yMax)
+    pt.AddText(' mean = ' + '{0:.2f}'.format(freq) + ' kHz')
+    pt.AddText('width = ' + '{0:.2f}'.format(width) + ' kHz    ')
     pt.SetShadowColor(0)
     pt.SetBorderSize(1)
     pt.SetFillColor(0)

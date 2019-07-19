@@ -269,8 +269,6 @@ class Fourier(common.Init):
         # define pave text to go along the collimator apertures lines
         pt, pt2 = style.setCollimatorAperturePaveText(self.cosine_histogram.GetMaximum(
         )*0.38, self.cosine_histogram.GetMaximum()*0.52, 'frequency')
-        pt3 = style.setRecFrequenciesPaveText(self.cosine_histogram.GetMean(), self.cosine_histogram.GetRMS(
-        ), self.cosine_histogram.GetMaximum()*0.38, self.cosine_histogram.GetMaximum()*0.52)
 
         # draw it all
         list_to_draw = [self.cosine_histogram, inner_line, outer_line, pt, pt2]
@@ -298,6 +296,9 @@ class Fourier(common.Init):
         self.cosine_histogram.SetTitle('')
         self.cosine_histogram.Draw('hist')
         self.canvas_fourier.Draw()
+        pt3 = style.setRecFrequenciesPaveText(self.cosine_histogram.GetMean(), self.cosine_histogram.GetRMS(
+        ), self.cosine_histogram.GetMaximum()*0.75, self.cosine_histogram.GetMaximum()*0.95)
+        pt3.Draw("same")
 
         # print plot if enabled by config file
         if (self.print_plot >= 1):
@@ -342,7 +343,7 @@ class Fourier(common.Init):
             # define pave text to display truth/reco level mean/width frequencies
             pt = style.setRecTruthFrequenciesPaveText(self.cosine_histogram.GetMean(), truth_histogram.GetMean(),
                                                       self.cosine_histogram.GetRMS(), truth_histogram.GetRMS(),
-                                                      self.cosine_histogram.GetMaximum()*1., self.cosine_histogram.GetMaximum()*0.8)
+                                                      self.cosine_histogram.GetMaximum()*0.8, self.cosine_histogram.GetMaximum()*1)
 
             # draw the TPaveText
             pt.Draw("same")
