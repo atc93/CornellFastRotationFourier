@@ -172,7 +172,7 @@ class Optimize_t0(configparser.ParseConfig):
             # specified in the config file
             if (self.background_fit == 'pol'):
                 fit_fn, chi2, sigma = util.fit_pol(
-                    a, b, err, self.poly_order, backgroud_stat_noise)
+                    a, b, err, self.poly_order, bkg_stat_noise)
 
             if (self.background_fit == 'sinc'):
                 fit_fn, chi2, sigma, popt, pcov = util.fit_sinc(

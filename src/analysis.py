@@ -328,7 +328,7 @@ def run_stat_fluc(config):
         # instantiate fast rotation class
         fr = fastrotation.FastRotation(config)
         # class method returns numpy arrays of the fast rotation signal
-        opt_tS, opt_tM, bin_center, bin_content = fr.produce()
+        opt_tS, opt_tM, n_positron_hits, bin_center, bin_content = fr.produce()
 
         save_default_tM = config['tM']
         save_default_tS = config['tS']
@@ -347,7 +347,7 @@ def run_stat_fluc(config):
         config['print_plot'] = True
 
         results = fourier.Fourier(
-            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2)
+            config, bin_center, bin_content, opt_t0, noise, fit_boundary1, fit_boundary2, n_positron_hits)
         results.run()
 
         config['print_plot'] = False

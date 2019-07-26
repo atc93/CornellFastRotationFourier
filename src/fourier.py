@@ -92,8 +92,7 @@ class Fourier(common.Init):
                 self.sine_histogram.SetBinContent(iBin, y)
 
         # define histogram(s) name
-        histoName = ['Cosine transform: t_{0} = ' + '{0:.2f} ns'.format(
-            self.opt_t0*1000), 'Sine transform: t_{0} = ' + '{0:.2f} ns'.format(self.opt_t0)]
+        histoName = [ '', 'Sine transform: t_{0} = ' + '{0:.2f} ns'.format(self.opt_t0)]
 
         # clone cosine histogram for plotting/styling puporses
         cosine_clone = self.cosine_histogram.Clone()
@@ -306,7 +305,7 @@ class Fourier(common.Init):
                 self.opt_t0, self.tS, self.tM, self.freq_step_size))
 
         # compare frequency distributions at truth/reconstructed levels if optiion specified for simulated data
-        if (self.compare_with_truth):
+        if (self.compare_with_truth and 1==2):
 
             # normalize the integral of the reco frequency distribution to 1
             self.cosine_histogram.Scale(1/self.cosine_histogram.Integral())
