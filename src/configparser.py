@@ -48,3 +48,4 @@ class ParseConfig:
         self.fix_fit_bound = config['fix_fit_bound']
         self.check_positron_hits = config['check_positron_hits']
         self.positron_hits_threshold = config['positron_hits_threshold']
+        self.cbo_freq = config['cbo_freq']

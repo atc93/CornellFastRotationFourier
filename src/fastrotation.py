@@ -167,8 +167,8 @@ class FastRotation(common.Init):
         nine_param_fit.SetParameter(3, five_param_fit.GetParameter(3))
         nine_param_fit.SetParameter(4, five_param_fit.GetParameter(4))
         nine_param_fit.SetParameter(5, 150)
-        nine_param_fit.SetParameter(6, 0.004)
-        nine_param_fit.SetParameter(7, 0.370)
+        nine_param_fit.SetParameter(6, 0.003)
+        nine_param_fit.SetParameter(7, self.cbo_freq/1000)
         nine_param_fit.SetParameter(8, 0.004)
         nine_param_fit.SetNpx(10000)
 
@@ -282,6 +282,8 @@ class FastRotation(common.Init):
             for time in self.times_to_plot:
                 plotting.plot(canvas_fastrotation, residuals, self.tag + '/Residuals',
                               self.tS, self.start_fit_time + time, self.tM)
+                plotting.plot(canvas_fastrotation, residuals, self.tag + '/Residuals',
+                              self.start_fit_time, self.start_fit_time + time, self.tM)
 
         # create fast rotation histogram
         for i in range(self.histogram.GetNbinsX()):
