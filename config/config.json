@@ -15,6 +15,7 @@
 	"tM":300,
         "n_t0_opt":4,
         "n_fit_param":9,
+        "cbo_freq":370,
         "freq_step_size":2,
         "lower_freq":6630,
         "upper_freq":6780,
