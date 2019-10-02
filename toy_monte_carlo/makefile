@@ -23,10 +23,10 @@ OBJ_DIR = obj
 SRC_DIR = src
 INC_DIR = inc
 
-all: FastRotationToyModel
+all: MonteCarlo
 
-FastRotationToyModel: $(SRC_DIR)/FastRotationToyModel.cpp
-	$(CC) -o $(BIN_DIR)/FastRotationToyModel $(SRC_DIR)/FastRotationToyModel.cpp $(RCXX)
+MonteCarlo: $(SRC_DIR)/MonteCarlo.cpp
+	$(CC) -o $(BIN_DIR)/MonteCarlo $(SRC_DIR)/MonteCarlo.cpp $(RCXX)
 
 clean:
 	rm -f $(OBJ_DIR)/*.o $(BIN_DIR)/*

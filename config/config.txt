@@ -1,0 +1,105 @@
+{
+  # Name for the output data directory.
+  "tag": "smoothW-correlation-startScan",
+
+  # Input ROOT file containing the fast rotation histogram.
+  "root_file": "data/smoothW-correlation.root",
+  "histo_name": "fr",
+  
+  # Rebin the FRS by grouping this number of adjacent bins to merge.
+  "rebin_frs_factor": 1,
+  
+  # Overlay truth-level frequency and radial distributions with recovered distributions.
+  "compare_with_truth": true,
+  "truth_root_file": "same",
+	"truth_freq_histo_name": "freq",
+	"truth_rad_histo_name": "r",
+  
+  # Background fit options.
+  "background_correction": "fit",
+  "background_fit": "sinc",
+  "poly_order": 2,
+  "background_frequencies": "all",
+  "remove_background": false,        
+  "background_removal_threshold": 2,
+  
+  # Optionally fix t0.
+  "fix_t0": false,
+  "fixed_t0_value": 0.1032,
+  
+  # Scan for optimized t0.
+  "t0_background_threshold": 2,
+	"lower_t0": 0.105,
+	"upper_t0": 0.107,
+	"t0_step_size": 0.000025,
+	"n_t0_opt": 4,
+	
+	# Start and end times for the cosine transform.
+	"tS": 0.120,
+	"tM": 300,
+  
+  # Frequency range for the cosine transform.
+  "freq_step_size": 2,
+  "lower_freq": 6630,
+  "upper_freq": 6780,
+  
+  # Optionally calculate the sine transform too.
+  "calc_sine": false,
+  
+  # Wiggle fit.
+  "n_fit_param": 0,
+  "start_fit_time": 30,
+  "rebin_wiggle_factor": 149,
+  
+  # E-field correction constant.
+  "field_index": 0.108,
+
+  # Check for sufficient statistics.
+  "check_positron_hits": true,
+  "positron_hits_threshold": 100000,
+
+  "fix_fit_bound": false,
+  "fit_lower_bound": 6671,
+  "fit_upper_bound": 6725,
+
+	"print_plot": 2,
+  "verbose": 1,
+  "append_results": false,
+
+  # Perform a coarse t0 scan.
+  "run_t0_scan": false,
+
+  # Repeat analysis over a range of start times.
+  "run_tS_scan": false,
+	"lower_tS": 0.000,
+	"upper_tS": 15.000,
+  "tS_step_size": 0.015,
+
+  # Repeat analysis over a range of end times.
+  "run_tM_scan": false,
+	"lower_tM": 300.000,
+	"upper_tM": 300.300,
+  "tM_step_size": 0.001,
+
+  # Repeat analysis over a range of frequency bin widths.
+  "run_freq_step_scan": false,
+  "lower_freq_step_size": 0.25,
+  "upper_freq_step_size": 3.75,
+  "freq_step_size_increment": 0.25,
+
+  # Randomly vary FRS bin content according to Poisson statistics.
+  "stat_fluctuation": false,
+  "n_stat_fluctuation": 0,
+
+  # Repeat analysis over a range of background thresholds.
+  "run_background_threshold_scan": false,
+  "lower_background_threshold": 1,
+  "upper_background_threshold": 5,
+  "background_threshold_step_size": 0.25,
+
+  # Repeat analysis over a range of background removal thresholds.
+  "run_background_removal_threshold_scan": false,
+  "lower_background_removal_threshold": 1,
+  "upper_background_removal_threshold": 5,
+  "background_removal_threshold_step_size": 0.25
+}
