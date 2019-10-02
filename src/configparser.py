@@ -23,7 +23,7 @@ class ParseConfig:
         self.calc_sine = config['calc_sine']
         self.append_results = config['append_results']
         self.root_file = config['root_file']
-        self.truth_root_file = config['truth_root_file']
+        self.truth_root_file = self.root_file if config['truth_root_file'].lower() == "same" else config['truth_root_file']
         self.freq_step_size = config['freq_step_size']
         self.lower_freq = config['lower_freq']
         self.upper_freq = config['upper_freq']
@@ -48,4 +48,3 @@ class ParseConfig:
         self.fix_fit_bound = config['fix_fit_bound']
         self.check_positron_hits = config['check_positron_hits']
         self.positron_hits_threshold = config['positron_hits_threshold']
-        self.cbo_freq = config['cbo_freq']

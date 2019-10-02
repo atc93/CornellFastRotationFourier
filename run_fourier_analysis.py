@@ -4,6 +4,7 @@ import src.util as util
 import ROOT as r
 import json
 import sys
+import re
 
 # do not show the ROOT INFO messages (e.g. Canvas being saved to EPS)
 r.gROOT.ProcessLine("gErrorIgnoreLevel = 1001;")
@@ -13,7 +14,11 @@ def main():
 
     # read in configuration file
     with open(sys.argv[1]) as config_file:
-        config = json.load(config_file)
+        # Remove '#'-denoted comments from the configuration file.
+        comment_pattern = r"(?m)^\s*#.*\n?"
+        config_text = re.sub(comment_pattern, "", config_file.read())
+        # Parse the configuration string.
+        config = json.loads(config_text)
 
     # manage results directory
     util.manage_results_directory('results/' + config['tag'])
