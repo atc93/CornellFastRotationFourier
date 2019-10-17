@@ -1,0 +1,110 @@
+{
+	"tm":200,
+	"num_frs":1,
+	"name":"frs",
+	"put_in_directory":true,
+	"name_directory":"Correlation",
+	"start_num":0,
+	"binwidth":0.001,
+        "fmin":6.63,
+        "fmax":6.78,
+        "use_numba":true,
+        "multiprocess":false,
+        "num_processors":4,
+        "field_index":0.1075,
+        
+        "add_momentum_time_correlation":true, 
+	"random_momentum_time_correlation":false,
+	"momentum_time_correlation":0.001,
+	"momentum_time_correlation_lower":-0.0015,
+	"momentum_time_correlation_upper":0.0015,
+	
+	"momentum_time_correlation_scan":false,
+        "momentum_time_scan_dr": 0.00025,
+        
+        "print_time":true,
+	"display_counter":true,
+        "print_graphs":true,
+        "save_result_text":true,
+        
+        "random_t0":false,
+	"t0_range_lower":0.045,
+	"t0_range_upper":0.060,
+	"t0_val":0.045,
+	
+        "frequency_random_num_gauss":false,
+        "frequency_num_gauss_lower":1,
+        "frequency_num_gauss_upper":3,
+        "frequency_num_gauss":1,
+        
+        "frequency_random_center":false,
+        "frequency_center_lower":-0.00175,
+        "frequency_center_upper":0.00175,
+        "frequency_center":0.0,
+        
+        "frequency_random_width":false,
+        "frequency_width_lower":0.00120,
+        "frequency_width_upper":0.00170,
+        "frequency_width":0.0015,
+        
+        "frequency_random_skew":false,
+        "frequency_skew_lower":-1.5,
+        "frequency_skew_upper":1.5,
+        "frequency_skew":0.0,
+        
+	"frequency_random_height":false,
+        "frequency_height_lower":1.0,
+        "frequency_height_upper":2.0,
+	"frequency_height":1.0,
+        
+       	"height_multigauss_factor_freq":1.0,
+        
+        "longitude_random_num_gauss":false,
+        "longitude_num_gauss_lower":1,
+        "longitude_num_gauss_upper":3,
+        "longitude_num_gauss":1,
+
+        "longitude_random_center":false,
+        "longitude_center_lower":-0.045,
+        "longitude_center_upper":0.045,
+        "longitude_center":0.0,
+        
+        "longitude_random_width":false,
+        "longitude_width_lower":0.0175,
+        "longitude_width_upper":0.0450,
+        "longitude_width":0.0300,
+        
+        "longitude_random_skew":false,
+        "longitude_skew_lower":-2.0,
+        "longitude_skew_upper":2.0,
+        "longitude_skew":0.0,
+        
+       	"longitude_random_height":false,
+        "longitude_height_lower":1.0,
+        "longitude_height_upper":3.0,
+	"longitude_height":1.0,
+	
+	"height_multigauss_factor_long":1.0,
+	
+	"add_noise":false,
+	"random_signal_to_noise_ratio":false,
+	"signal_to_noise_ratio_lower":900.0,
+	"signal_to_noise_ratio_upper":1000.0,
+	"signal_to_noise_ratio":1000.0,
+	"noise_type":"gauss",
+	"exponential_increasing_noise":true,
+        
+       	"real_t0_optimization":true,
+	"ts_for_optimization":4.0,
+	
+	"create_Fourier_config":true,
+	"Fourier_config_name":"config_Fourier",
+	"n_t0_opt":5,
+	"background_fit":"sinc",
+	"background_frequencies":"all",
+	"remove_background":false,        
+	"background_removal_threshold":2,
+	"t0_background_threshold":2,
+	"tS":4.0,
+	"freq_step_size":2       
+}
